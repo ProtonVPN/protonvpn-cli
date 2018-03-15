@@ -21,7 +21,7 @@ The program automatically checks for missing requirements.
 ```bash
 $ git clone "https://github.com/protonvpn/protonvpn-cli"
 $ cd protonvpn-cli
-$ ./protonvpn-cli -install
+$ ./protonvpn-cli.sh -install
 ```
 
 # Usage #
