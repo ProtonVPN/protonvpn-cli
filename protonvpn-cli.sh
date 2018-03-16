@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ######################################################
 # ProtonVPN CLI
-# ProtonVPN Command-Line Manager
+# ProtonVPN Command-Line Tool
 #
 # Made with <3 for Linux + MacOS.
 ###
@@ -396,7 +396,7 @@ END`
 }
 
 function help_message() {
-    echo "ProtonVPN Command-Line Manager"
+    echo "ProtonVPN Command-Line Tool"
     echo -e "\tUsage:"
     echo "$0 -init, --init                   Initialize ProtonVPN profile on the machine."
     echo "$0 -c, -connect                    Select a VPN from ProtonVPN menu."

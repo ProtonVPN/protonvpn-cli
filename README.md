@@ -1,9 +1,9 @@
 *protonvpn-cli*
 ================
-## ProtonVPN Command-Line Manager ##
+## ProtonVPN Command-Line Tool ##
 
 # Overview #
-protonvpn-cli is a command-line VPN client manager for Linux and MacOS.
+protonvpn-cli is a command-line tool for Linux and MacOS.
 
 # Requirements #
 
