@@ -1,6 +1,7 @@
 *protonvpn-cli*
 ================
-## ProtonVPN Command-Line Tool ##
+
+![protonvpn-cli](https://i.imgur.com/tDrwkX5l.png)
 
 # Overview #
 protonvpn-cli is a command-line tool for Linux and MacOS.
