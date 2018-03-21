@@ -46,7 +46,10 @@ function check_ip() {
     fi
 
     if [[ $counter -lt 3 ]]; then
-      ip=$(wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' --header 'Accept: application/vnd.protonmail.v1+json' --timeout 4 -q -O /dev/stdout 'https://api.protonmail.ch/vpn/location' | grep 'IP' | cut -d ':' -f2 | cut -d '"' -f2)
+      ip=$(wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
+        --header 'Accept: application/vnd.protonmail.v1+json' \
+        --timeout 4 -q -O /dev/stdout 'https://api.protonmail.ch/vpn/location' \
+        | grep 'IP' | cut -d ':' -f2 | cut -d '"' -f2)
       counter=$((counter+1))
     else
       ip="Error."
@@ -171,7 +174,10 @@ function openvpn_connect() {
 
   current_ip=$(check_ip)
 
-  wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' --header 'Accept: application/vnd.protonmail.v1+json' --timeout 4 -q -O /dev/stdout "https://api.protonmail.ch/vpn/config?Platform=linux&ServerID=$config_id&Protocol=$selected_protocol" | openvpn --daemon --config "/dev/stdin" --auth-user-pass ~/.protonvpn-cli/protonvpn_openvpn_credentials  --auth-nocache
+  wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
+    --header 'Accept: application/vnd.protonmail.v1+json' \
+    --timeout 4 -q -O /dev/stdout "https://api.protonmail.ch/vpn/config?Platform=linux&ServerID=$config_id&Protocol=$selected_protocol" \
+    | openvpn --daemon --config "/dev/stdin" --auth-user-pass ~/.protonvpn-cli/protonvpn_openvpn_credentials --auth-nocache
 
   echo "Connecting..."
 
@@ -283,7 +289,8 @@ function connection_to_vpn_via_dialog_menu() {
     ARRAY+=($data)
   done
 
-  config_id=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" --menu "ID - Name - Country - Load - EntryIP - ExitIP - Features" 35 300 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
+  config_id=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
+    --menu "ID - Name - Country - Load - EntryIP - ExitIP - Features" 35 300 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
   clear
   if [[ $config_id == "" ]]; then
     exit 2
@@ -300,7 +307,8 @@ function connection_to_vpn_via_dialog_menu() {
     c=$((c+1))
   done
 
-  selected_protocol=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --menu "Select Network Protocol" 35 80 2 "${available_protocols[@]}")
+  selected_protocol=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" \
+    --menu "Select Network Protocol" 35 80 2 "${available_protocols[@]}")
   clear
   if [[ $selected_protocol == "" ]]; then
     exit 2
@@ -310,7 +318,9 @@ function connection_to_vpn_via_dialog_menu() {
 
 }
 function get_fastest_vpn_connection_id() {
-  response_output=$(wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' --header 'Accept: application/vnd.protonmail.v1+json' --timeout 20 -q -O /dev/stdout "https://api.protonmail.ch/vpn/logicals")
+  response_output=$(wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
+    --header 'Accept: application/vnd.protonmail.v1+json' \
+    --timeout 20 -q -O /dev/stdout "https://api.protonmail.ch/vpn/logicals")
   tier=$(cat ~/.protonvpn-cli/protonvpn_tier)
   output=`python <<END
 import json, random
@@ -351,7 +361,9 @@ END`
 }
 
 function get_random_vpn_connection_id() {
-  response_output=$(wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' --header 'Accept: application/vnd.protonmail.v1+json' --timeout 20 -q -O /dev/stdout "https://api.protonmail.ch/vpn/logicals")
+  response_output=$(wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
+    --header 'Accept: application/vnd.protonmail.v1+json' \
+    --timeout 20 -q -O /dev/stdout "https://api.protonmail.ch/vpn/logicals")
   tier=$(cat ~/.protonvpn-cli/protonvpn_tier)
   output=`python <<END
 import json, random
@@ -367,7 +379,9 @@ END`
 }
 
 function get_vpn_config_details() {
-  response_output=$(wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' --header 'Accept: application/vnd.protonmail.v1+json' --timeout 20 -q -O /dev/stdout "https://api.protonmail.ch/vpn/logicals")
+  response_output=$(wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
+    --header 'Accept: application/vnd.protonmail.v1+json' \
+    --timeout 20 -q -O /dev/stdout "https://api.protonmail.ch/vpn/logicals")
   tier=$(cat ~/.protonvpn-cli/protonvpn_tier)
   output=`python <<END
 import json, random
@@ -389,7 +403,9 @@ for _ in output:
     else:
         server_features_output = ",".join(server_features)
 
-    o = "{} {}@{}@{}@{}@{}@{}".format(_["Servers"][0]["ID"], _["Name"], _["EntryCountry"], _["Load"], _["Servers"][0]["EntryIP"], _["Servers"][0]["ExitIP"], str(server_features_output))
+    o = "{} {}@{}@{}@{}@{}@{}".format(_["Servers"][0]["ID"], _["Name"], \
+      _["EntryCountry"], _["Load"], _["Servers"][0]["EntryIP"], _["Servers"][0]["ExitIP"], \
+      str(server_features_output))
     print(o)
 END`
 
