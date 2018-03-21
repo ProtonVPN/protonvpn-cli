@@ -197,6 +197,7 @@ function openvpn_connect() {
 }
 
 function install_cli() {
+  mkdir -p "/usr/local/bin/"
   cli=$(readlink -f "$0")
   cp "$cli" "/usr/local/bin/protonvpn-cli"
   ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn"
