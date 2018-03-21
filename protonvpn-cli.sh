@@ -333,7 +333,7 @@ for _ in json_parsed_response["LogicalServers"]:
             is_excluded = True
     if is_excluded is True:
         continue
-    if (_["Load"] < min_load["Load"]) and (_["Load"] < 10) and (_["Tier"] <= """$tier"""):
+    if (_["Load"] < min_load["Load"]) and (_["Load"] < 10) and (_["Tier"] <= int("""$tier""")):
         min_load = _
         candidates1.append(_)
 min_score = candidates1[0]
