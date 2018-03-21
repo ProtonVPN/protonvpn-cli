@@ -137,7 +137,9 @@ function openvpn_disconnect() {
   max_checks=3
   counter=0
 
-  echo "Disconnecting..."
+  if [[ "$1" != "quiet" ]]; then
+    echo "Disconnecting..."
+  fi
 
   while [[ $counter -lt $max_checks ]]; do
       pkill -f openvpn
