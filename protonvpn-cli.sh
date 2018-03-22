@@ -8,6 +8,7 @@
 #Author: Mazin Ahmed <Mazin AT ProtonMail DOT ch>
 ######################################################
 
+
 if [[ ("$UID" != 0) && ("$1" != "ip") && ("$1" != "-ip") && ("$1" != "--ip") ]]; then
   echo "[!] Error: The program requires root access."
   exit 1
@@ -65,7 +66,7 @@ function init_cli() {
   read -p "Enter OpenVPN username: " "openvpn_username"
   read -s -p "Enter OpenVPN password: " "openvpn_password"
   echo -e "$openvpn_username\n$openvpn_password" > ~/.protonvpn-cli/protonvpn_openvpn_credentials
-  chown "$USER:$USER" ~/.protonvpn-cli/protonvpn_openvpn_credentials
+  chown "$USER:$(id -gn $USER)" ~/.protonvpn-cli/protonvpn_openvpn_credentials
   chmod 0400 ~/.protonvpn-cli/protonvpn_openvpn_credentials
 
   echo -e "\n[.] ProtonVPN Plans:\n1) Free\n2) Basic\n3) Plus\n4) Visionary"
@@ -84,11 +85,11 @@ function init_cli() {
     ;; esac
   done
   echo -e "$protonvpn_tier" > ~/.protonvpn-cli/protonvpn_tier
-  chown "$USER:$USER" ~/.protonvpn-cli/protonvpn_tier
+  chown "$USER:$(id -gn $USER)" ~/.protonvpn-cli/protonvpn_tier
   chmod 0400 ~/.protonvpn-cli/protonvpn_tier
 
-  chown "$USER:$USER" -R ~/.protonvpn-cli/
-  chown 0400 -R ~/.protonvpn-cli/
+  chown "$USER:$(id -gn $USER)" -R ~/.protonvpn-cli/
+  chmod -R 0400 ~/.protonvpn-cli/
 
 }
 
@@ -206,10 +207,10 @@ function openvpn_connect() {
 
 function install_cli() {
   mkdir -p "/usr/local/bin/"
-  cli=$(readlink -f "$0")
+  cli="$( cd "$(dirname "$0")" ; pwd -P )/$0"
   cp "$cli" "/usr/local/bin/protonvpn-cli"
   ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn"
-  chown "root:root" "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn"
+  chown "$USER:$(id -gn $USER)" "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn"
   chmod 0755 "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn"
   echo "Done."
 }
