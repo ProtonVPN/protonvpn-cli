@@ -33,7 +33,7 @@ $ ./protonvpn-cli.sh -install
 | `protonvpn-cli -init`            | Initialize ProtonVPN profile on the machine.  |
 | `protonvpn-cli -connect`         | Select a VPN from ProtonVPN menu.             |
 | `protonvpn-cli -random-connect`  | Connect to a random ProtonVPN VPN.            |
-| `protonvpn-cli -fastest-connect` | Connected to a fast ProtonVPN VPN.            |
+| `protonvpn-cli -fastest-connect` | Connect to a fast ProtonVPN VPN.              |
 | `protonvpn-cli -disconnect`      | Disconnect from VPN.                          |
 | `protonvpn-cli -ip`              | Print the current public IP address.          |
 | `protonvpn-cli -install`         | Install protonvpn-cli.                        |

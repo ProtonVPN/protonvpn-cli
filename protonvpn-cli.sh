@@ -424,11 +424,11 @@ function help_message() {
     echo "$0 -init, --init                   Initialize ProtonVPN profile on the machine."
     echo "$0 -c, -connect                    Select a VPN from ProtonVPN menu."
     echo "$0 -random-connect                 Connect to a random ProtonVPN VPN."
-    echo "$0 -fastest-connect                Connected to a fast ProtonVPN VPN."
+    echo "$0 -fastest-connect                Connect to a fast ProtonVPN VPN."
     echo "$0 -d, -disconnect                 Disconnect from VPN."
     echo "$0 -ip                             Print the current public IP address."
     echo "$0 -install                        Install protonvpn-cli."
-    echo "$0 -uninstall                      Uninstall protonvn-cli."
+    echo "$0 -uninstall                      Uninstall protonvpn-cli."
     echo "$0 -h, --help                      Show help message."
     exit 0
 }
