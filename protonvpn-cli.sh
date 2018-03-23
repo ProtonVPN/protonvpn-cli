@@ -437,9 +437,9 @@ case $user_input in
     ;;
   "-d"|"-disconnect"|"--d"|"--disconnect") openvpn_disconnect
     ;;
-  "-random-connect"|"-random"|"--random") connect_to_random_vpn
+  "-r"|"-random-connect"|"--r"|"-random"|"--random") connect_to_random_vpn
     ;;
-  "-fastest-connect"|"-fastest"|"--fastest") connect_to_fastest_vpn
+  "-f"|"-fastest-connect"|"--f"|"-fastest"|"--fastest") connect_to_fastest_vpn
     ;;
   "-c"|"-connect"|"--c"|"--connect") connection_to_vpn_via_dialog_menu
     ;;
