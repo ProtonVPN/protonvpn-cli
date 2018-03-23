@@ -7,9 +7,12 @@
 ###
 #Author: Mazin Ahmed <Mazin AT ProtonMail DOT ch>
 ######################################################
+  #""|"-h"|"--help"|"--h"|"-help"|"help")
 
-
-if [[ ("$UID" != 0) && ("$1" != "ip") && ("$1" != "-ip") && ("$1" != "--ip") ]]; then
+if [[ ("$UID" != 0) && ("$1" != "ip") && ("$1" != "-ip") && \
+      ("$1" != "--ip") && !( -z "$1") && ("$1" != "-h") && \
+      ("$1" != "--help") && ("$1" != "--h") && ("$1" != "-help") && \
+      ("$1" != "help") ]]; then
   echo "[!] Error: The program requires root access."
   exit 1
 fi
@@ -422,7 +425,7 @@ function help_message() {
     echo "$0 -c, -connect                    Select a VPN from ProtonVPN menu."
     echo "$0 -random-connect                 Connect to a random ProtonVPN VPN."
     echo "$0 -fastest-connect                Connected to a fast ProtonVPN VPN."
-    echo "$0 -d, disconnect, -disconnect     Disconnect from VPN."
+    echo "$0 -d, -disconnect                 Disconnect from VPN."
     echo "$0 -ip                             Print the current public IP address."
     echo "$0 -install                        Install protonvpn-cli."
     echo "$0 -uninstall                      Uninstall protonvn-cli."
@@ -431,17 +434,17 @@ function help_message() {
 }
 
 check_requirements
-user_input=$1
+user_input="$1"
 case $user_input in
   ""|"-h"|"--help"|"--h"|"-help"|"help") help_message
     ;;
-  "-d"|"-disconnect"|"--d"|"--disconnect") openvpn_disconnect
+  "-d"|"--d"|"-disconnect"|"--disconnect") openvpn_disconnect
     ;;
-  "-r"|"-random-connect"|"--r"|"-random"|"--random") connect_to_random_vpn
+  "-r"|"--r"|"-random"|"--random"|"-random-connect") connect_to_random_vpn
     ;;
-  "-f"|"-fastest-connect"|"--f"|"-fastest"|"--fastest") connect_to_fastest_vpn
+  "-f"|"--f"|"-fastest"|"--fastest"|"-fastest-connect") connect_to_fastest_vpn
     ;;
-  "-c"|"-connect"|"--c"|"--connect") connection_to_vpn_via_dialog_menu
+  "-c"|"--c"|"-connect"|"--connect") connection_to_vpn_via_dialog_menu
     ;;
   "ip"|"-ip"|"--ip") check_ip
     ;;
