@@ -120,8 +120,8 @@ function modify_dns_resolvconf() {
       dns_server="10.8.0.1" # free tier dns
     else
       dns_server="10.8.8.1" # paid tier dns
-    echo -e "# ProtonVPN DNS - protonvpn-cli\nnameserver $dns_server" > "/etc/resolv.conf"
     fi
+    echo -e "# ProtonVPN DNS - protonvpn-cli\nnameserver $dns_server" > "/etc/resolv.conf"
   fi
 
   if [[ "$1" == "revert_to_backup" ]]; then
