@@ -91,7 +91,7 @@ function init_cli() {
   chown "$USER:$(id -gn $USER)" ~/.protonvpn-cli/protonvpn_tier
   chmod 0400 ~/.protonvpn-cli/protonvpn_tier
 
-  chown "$USER:$(id -gn $USER)" -R ~/.protonvpn-cli/
+  chown -R "$USER:$(id -gn $USER)" ~/.protonvpn-cli/
   chmod -R 0400 ~/.protonvpn-cli/
 
 }
