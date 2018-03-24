@@ -78,7 +78,7 @@ function check_ip() {
     if [[ $counter -lt 3 ]]; then
       ip=$(wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
         --header 'Accept: application/vnd.protonmail.v1+json' \
-        --timeout 4 -q -O /dev/stdout 'https://api.protonmail.ch/vpn/location' \
+        --timeout 6 -q -O /dev/stdout 'https://api.protonmail.ch/vpn/location' \
         | awk -F'"' '$2 == "IP" { print $4 }')
       counter=$((counter+1))
     else
@@ -209,7 +209,7 @@ function openvpn_connect() {
 
   wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
     --header 'Accept: application/vnd.protonmail.v1+json' \
-    --timeout 4 -q -O /dev/stdout "https://api.protonmail.ch/vpn/config?Platform=linux&ServerID=$config_id&Protocol=$selected_protocol" \
+    --timeout 10 -q -O /dev/stdout "https://api.protonmail.ch/vpn/config?Platform=linux&ServerID=$config_id&Protocol=$selected_protocol" \
     | openvpn --daemon --config "/dev/stdin" --auth-user-pass ~/.protonvpn-cli/protonvpn_openvpn_credentials --auth-nocache
 
   echo "Connecting..."
