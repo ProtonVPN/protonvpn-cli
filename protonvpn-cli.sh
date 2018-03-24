@@ -39,6 +39,34 @@ function check_requirements() {
     echo "[!] Error: sysctl is not installed. Install \`sysctl\` package to continue."
     exit 1
   fi
+
+  if [[ ! -f "/etc/openvpn/update-resolv-conf" ]]; then
+    echo "[!] Errror: openvpn-resolv-conf is not installed."
+    read -p "Would you like protonvpn-cli to install openvpn-resolv-conf? (y/n): " "user_confirm"
+    if [[ "$user_confirm" == "y" ]]; then
+      install_openvpn_update_resolv_conf
+    else
+      exit 1
+    fi
+  fi 
+}
+
+function install_openvpn_update_resolv_conf() {
+  if [[ ("$UID" != 0) ]]; then
+    echo "[!] Error: installation requires root access."
+    exit 1
+  fi
+  echo "[*] Installing openvpn-update-resolv-conf"
+  mkdir -p "/etc/openvpn/"
+  wget "https://raw.githubusercontent.com/ProtonVPN/scripts/master/update-resolv-conf.sh" -O /etc/openvpn/update-resolv-conf
+  if [[ $? != 0 ]]; then
+    echo "[!] Error installing openvpn-update-resolv-conf"
+    exit 1
+  else 
+    chmod +x "/etc/openvpn/update-resolv-conf"
+    echo "[*] Done."
+    exit 0
+  fi
 }
 
 function check_ip() {
