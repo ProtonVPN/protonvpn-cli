@@ -40,7 +40,7 @@ function check_requirements() {
   fi
 
   if [[ ! -f "/etc/openvpn/update-resolv-conf" ]]; then
-    echo "[!] Errror: openvpn-resolv-conf is not installed."
+    echo "[!] Error: openvpn-resolv-conf is not installed."
     read -p "Would you like protonvpn-cli to install openvpn-resolv-conf? (y/n): " "user_confirm"
     if [[ "$user_confirm" == "y" ]]; then
       install_openvpn_update_resolv_conf
@@ -267,7 +267,7 @@ function connect_to_fastest_vpn() {
     exit 1
   fi
   if [[ "$(check_ip)" == "Error." ]]; then
-    echo "[!]Error: There is an internet connection issue."
+    echo "[!] Error: There is an internet connection issue."
     exit 1
   fi
 
@@ -284,7 +284,7 @@ function connect_to_random_vpn() {
     exit 1
   fi
   if [[ "$(check_ip)" == "Error." ]]; then
-    echo "[!]Error: There is an internet connection issue."
+    echo "[!] Error: There is an internet connection issue."
     exit 1
   fi
 
@@ -302,7 +302,7 @@ function connection_to_vpn_via_dialog_menu() {
     exit 1
   fi
   if [[ "$(check_ip)" == "Error." ]]; then
-    echo "[!]Error: There is an internet connection issue."
+    echo "[!] Error: There is an internet connection issue."
     exit 1
   fi
 
