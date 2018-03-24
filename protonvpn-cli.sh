@@ -47,7 +47,7 @@ function check_requirements() {
     else
       exit 1
     fi
-  fi 
+  fi
 }
 
 function install_openvpn_update_resolv_conf() {
@@ -61,10 +61,9 @@ function install_openvpn_update_resolv_conf() {
   if [[ $? != 0 ]]; then
     echo "[!] Error installing openvpn-update-resolv-conf"
     exit 1
-  else 
+  else
     chmod +x "/etc/openvpn/update-resolv-conf"
     echo "[*] Done."
-    exit 0
   fi
 }
 
