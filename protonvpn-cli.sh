@@ -7,7 +7,6 @@
 ###
 #Author: Mazin Ahmed <Mazin AT ProtonMail DOT ch>
 ######################################################
-  #""|"-h"|"--help"|"--h"|"-help"|"help")
 
 if [[ ("$UID" != 0) && ("$1" != "ip") && ("$1" != "-ip") && \
       ("$1" != "--ip") && !( -z "$1") && ("$1" != "-h") && \
@@ -58,7 +57,7 @@ function install_openvpn_update_resolv_conf() {
   fi
   echo "[*] Installing openvpn-update-resolv-conf"
   mkdir -p "/etc/openvpn/"
-  wget "https://raw.githubusercontent.com/ProtonVPN/scripts/master/update-resolv-conf.sh" -O /etc/openvpn/update-resolv-conf
+  wget "https://raw.githubusercontent.com/ProtonVPN/scripts/master/update-resolv-conf.sh" -O "/etc/openvpn/update-resolv-conf"
   if [[ $? != 0 ]]; then
     echo "[!] Error installing openvpn-update-resolv-conf"
     exit 1
@@ -122,6 +121,7 @@ function init_cli() {
   chown -R "$USER:$(id -gn $USER)" ~/.protonvpn-cli/
   chmod -R 0400 ~/.protonvpn-cli/
 
+  echo "[*] Done."
 }
 
 function manage_ipv6() {
@@ -243,13 +243,13 @@ function install_cli() {
   ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn"
   chown "$USER:$(id -gn $USER)" "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn"
   chmod 0755 "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn"
-  echo "Done."
+  echo "[*] Done."
 }
 
 function uninstall_cli() {
   rm -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn"
   rm -rf ~/.protonvpn-cli/
-  echo "Done."
+  echo "[*] Done."
 }
 
 function check_if_profile_initialized() {
