@@ -361,6 +361,9 @@ json_parsed_response = json.loads("""$response_output""")
 min_load = json_parsed_response["LogicalServers"][0]
 candidates1 = []
 candidates2 = []
+
+candidates1.append(json_parsed_response["LogicalServers"][0])
+
 all_features = {"SECURE_CORE": 1, "TOR": 2, "P2P": 4, "XOR": 8, "IPV6": 16}
 excluded_features_on_fastest_connect = ["TOR"]
 
@@ -379,7 +382,11 @@ for _ in json_parsed_response["LogicalServers"]:
     if (_["Load"] < min_load["Load"]) and (_["Load"] < 10) and (_["Tier"] <= int("""$tier""")):
         min_load = _
         candidates1.append(_)
+if len(candidates1) > 1:
+    candidates1.pop(0)
+
 min_score = candidates1[0]
+
 for _ in candidates1:
     if (_["Score"] < min_score["Score"]):
         candidates2.append(_)
@@ -387,7 +394,9 @@ if len(candidates2) == 0:
     vpn_connection_id = random.choice(candidates1)["Servers"][0]["ID"]
 else:
     vpn_connection_id = random.choice(candidates2)["Servers"][0]["ID"]
+
 print(vpn_connection_id)
+
 END`
 
   echo "$output"
