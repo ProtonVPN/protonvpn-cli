@@ -285,7 +285,7 @@ function uninstall_cli() {
   if [[ $errors_counter == 0 ]]; then
     echo "[*] Done."
   else
-    echo "[!] Error: There was an error in installing protonvpn-cli."
+    echo "[!] Error: There was an error in uninstalling protonvpn-cli."
   fi
 }
 
