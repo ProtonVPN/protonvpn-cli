@@ -264,7 +264,7 @@ function install_cli() {
    errors_counter=$((errors_counter+1))
   fi
   
-  if [[ $errors_counter == 0 ]]; then
+  if [[ ($errors_counter == 0) || ( $(which protonvpn-cli) != "" ) ]]; then
     echo "[*] Done."
   else
     echo "[!] Error: There was an error in installing protonvpn-cli."
@@ -282,7 +282,7 @@ function uninstall_cli() {
    errors_counter=$((errors_counter+1))
   fi
   
-  if [[ $errors_counter == 0 ]]; then
+  if [[ ($errors_counter == 0) || ( $(which protonvpn-cli) == "" ) ]]; then
     echo "[*] Done."
   else
     echo "[!] Error: There was an error in uninstalling protonvpn-cli."
