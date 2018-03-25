@@ -13,7 +13,7 @@ if [[ ("$UID" != 0) && ("$1" != "ip") && ("$1" != "-ip") && \
       ("$1" != "--help") && ("$1" != "--h") && ("$1" != "-help") && \
       ("$1" != "help") ]]; then
   echo "[!] Error: The program requires root access."
-  #exit 1
+  exit 1
 fi
 
 function check_requirements() {
