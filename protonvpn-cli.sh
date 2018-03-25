@@ -255,7 +255,7 @@ function check_if_profile_initialized() {
   _=$(cat ~/.protonvpn-cli/protonvpn_openvpn_credentials ~/.protonvpn-cli/protonvpn_tier &> /dev/null)
   if [[ $? != 0 ]]; then
     echo "[!] Profile is not initialized."
-    echo -e "Initialize your profile using: \n    $0 -init"
+    echo -e "Initialize your profile using: \n    $(basename $0) -init"
     exit 1
   fi
 }
@@ -446,17 +446,20 @@ END`
 }
 
 function help_message() {
-    echo "ProtonVPN Command-Line Tool"
-    echo -e "\tUsage:"
-    echo "$0 -init, --init                   Initialize ProtonVPN profile on the machine."
-    echo "$0 -c, -connect                    Select a VPN from ProtonVPN menu."
-    echo "$0 -r, -random-connect             Connect to a random ProtonVPN VPN."
-    echo "$0 -f, -fastest-connect            Connect to a fast ProtonVPN VPN."
-    echo "$0 -d, -disconnect                 Disconnect from VPN."
-    echo "$0 -ip                             Print the current public IP address."
-    echo "$0 -install                        Install protonvpn-cli."
-    echo "$0 -uninstall                      Uninstall protonvpn-cli."
-    echo "$0 -h, --help                      Show help message."
+    echo
+    echo -e "ProtonVPN Command-Line Tool\n"
+    echo -e "Usage: $(basename $0) [option]\n"
+    echo "Options:"
+    echo "   -init, --init            Initialize ProtonVPN profile on the machine."
+    echo "   -c, -connect             Select a VPN from ProtonVPN menu."
+    echo "   -r, -random-connect      Connect to a random ProtonVPN VPN."
+    echo "   -f, -fastest-connect     Connect to a fast ProtonVPN VPN."
+    echo "   -d, -disconnect          Disconnect from VPN."
+    echo "   -ip                      Print the current public IP address."
+    echo "   -install                 Install protonvpn-cli."
+    echo "   -uninstall               Uninstall protonvpn-cli."
+    echo "   -h, --help               Show help message."
+    echo
     exit 0
 }
 
