@@ -236,12 +236,12 @@ function openvpn_connect() {
 }
 
 function install_cli() {
-  mkdir -p "/usr/local/bin/"
+  mkdir -p "/usr/bin/"
   cli="$( cd "$(dirname "$0")" ; pwd -P )/$0"
-  cp "$cli" "/usr/local/bin/protonvpn-cli"
-  ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn"
-  chown "$USER:$(id -gn $USER)" "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn"
-  chmod 0755 "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn"
+  cp "$cli" "/usr/bin/protonvpn-cli"
+  ln -s -f "/usr/bin/protonvpn-cli" "/usr/bin/pvpn"
+  chown "$USER:$(id -gn $USER)" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn"
+  chmod 0755 "/usr/bin/protonvpn-cli" "/usr/bin/pvpn"
   echo "[*] Done."
 }
 
