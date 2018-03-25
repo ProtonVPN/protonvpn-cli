@@ -289,7 +289,7 @@ function connect_to_random_vpn() {
   fi
 
   echo "Fetching ProtonVPN Servers..."
-  config_id=$(get_fastest_vpn_connection_id)
+  config_id=$(get_random_vpn_connection_id)
   available_protocols=("tcp" "udp")
   selected_protocol=${available_protocols[$RANDOM % ${#available_protocols[@]}]}
   openvpn_connect "$config_id" "$selected_protocol"
@@ -403,7 +403,7 @@ import json, random
 json_parsed_response = json.loads("""$response_output""")
 output = []
 for _ in json_parsed_response["LogicalServers"]:
-    if (_["Tier"] <= int("""$tier"""):
+    if (_["Tier"] <= int("""$tier""")):
         output.append(_)
 print(random.choice(output)["Servers"][0]["ID"])
 END`
