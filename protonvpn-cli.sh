@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+/#!/usr/bin/env bash
 ######################################################
 # ProtonVPN CLI
 # ProtonVPN Command-Line Tool
@@ -246,7 +246,7 @@ function install_cli() {
 }
 
 function uninstall_cli() {
-  rm -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn"
+  rm -f "/usr/bin/protonvpn-cli" "/usr/bin/pvpn"
   rm -rf ~/.protonvpn-cli/
   echo "[*] Done."
 }
