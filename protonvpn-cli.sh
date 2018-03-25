@@ -13,7 +13,7 @@ if [[ ("$UID" != 0) && ("$1" != "ip") && ("$1" != "-ip") && \
       ("$1" != "--help") && ("$1" != "--h") && ("$1" != "-help") && \
       ("$1" != "help") ]]; then
   echo "[!] Error: The program requires root access."
-  exit 1
+  #exit 1
 fi
 
 function check_requirements() {
@@ -238,21 +238,55 @@ function openvpn_connect() {
 function install_cli() {
   mkdir -p "/usr/bin/"
   cli="$( cd "$(dirname "$0")" ; pwd -P )/$0"
-  cp "$cli" "/usr/local/bin/protonvpn-cli"
-  ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn"
-
-  ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/bin/protonvpn-cli"
-  ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/bin/pvpn"
-
-  chown "$USER:$(id -gn $USER)" "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn"
-  chmod 0755 "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn"
-  echo "[*] Done."
+  errors_counter=0
+  cp "$cli" "/usr/local/bin/protonvpn-cli" &> /dev/null
+  if [[ $? != 0 ]]; then
+   errors_counter=$((errors_counter+1))
+  fi
+  ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" &> /dev/null
+  if [[ $? != 0 ]]; then
+   errors_counter=$((errors_counter+1))
+  fi
+  ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/bin/protonvpn-cli" &> /dev/null
+  if [[ $? != 0 ]]; then
+   errors_counter=$((errors_counter+1))
+  fi
+  ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/bin/pvpn" &> /dev/null
+  if [[ $? != 0 ]]; then
+   errors_counter=$((errors_counter+1))
+  fi
+  chown "$USER:$(id -gn $USER)" "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn" &> /dev/null
+  if [[ $? != 0 ]]; then
+   errors_counter=$((errors_counter+1))
+  fi
+  chmod 0755 "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn" &> /dev/null
+  if [[ $? != 0 ]]; then
+   errors_counter=$((errors_counter+1))
+  fi
+  
+  if [[ $errors_counter == 0 ]]; then
+    echo "[*] Done."
+  else
+    echo "[!] Error: There was an error in installing protonvpn-cli."
+  fi
 }
 
 function uninstall_cli() {
-  rm -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn"
-  rm -rf ~/.protonvpn-cli/
-  echo "[*] Done."
+  errors_counter=0
+  rm -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn" &> /dev/null
+  if [[ $? != 0 ]]; then
+   errors_counter=$((errors_counter+1))
+  fi
+  rm -rf ~/.protonvpn-cli/ &> /dev/null
+  if [[ $? != 0 ]]; then
+   errors_counter=$((errors_counter+1))
+  fi
+  
+  if [[ $errors_counter == 0 ]]; then
+    echo "[*] Done."
+  else
+    echo "[!] Error: There was an error in installing protonvpn-cli."
+  fi
 }
 
 function check_if_profile_initialized() {
