@@ -22,7 +22,13 @@ The program automatically checks for missing requirements.
 ```bash
 $ git clone "https://github.com/protonvpn/protonvpn-cli"
 $ cd protonvpn-cli
-$ ./protonvpn-cli.sh -install
+$ sudo ./protonvpn-cli.sh -install
+```
+
+### Or (one-liner): ###
+
+```bash
+$ sudo bash -c "git clone https://github.com/ProtonVPN/protonvpn-cli.git ; ./protonvpn-cli/protonvpn-cli.sh -install"
 ```
 
 # Usage #
