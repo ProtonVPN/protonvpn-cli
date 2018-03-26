@@ -3,7 +3,7 @@
 # ProtonVPN CLI
 # ProtonVPN Command-Line Tool
 #
-# Made with <3 for Linux + MacOS.
+# Made with <3 for Linux + macOS.
 ###
 #Author: Mazin Ahmed <Mazin AT ProtonMail DOT ch>
 ######################################################
