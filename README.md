@@ -4,7 +4,7 @@
 ![protonvpn-cli](https://i.imgur.com/tDrwkX5l.png)
 
 # Overview #
-protonvpn-cli is a command-line tool for Linux and MacOS.
+protonvpn-cli is a command-line tool for Linux and macOS.
 
 # Requirements #
 
@@ -50,4 +50,4 @@ $ sudo bash -c "git clone https://github.com/ProtonVPN/protonvpn-cli.git ; ./pro
 
 # Compatibility #
 * Linux
-* MacOS
+* macOS
