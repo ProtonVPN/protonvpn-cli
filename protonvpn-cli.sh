@@ -278,9 +278,13 @@ function update_cli() {
     echo "[!] Error: There is an internet connection issue."
     exit 1
   fi
+  cli_path="/usr/local/bin/protonvpn-cli"
+  if [[ ! -f "$cli_path" ]]; then
+    echo "[!] Error: protonvpn-cli does not seem to be installed."
+    exit 1
+  fi
   echo "[#] Checking for update."
-  cli="$( cd "$(dirname "$0")" ; pwd -P )/$0"
-  current_local_hashsum=$(sha512sum "$cli")
+  current_local_hashsum=$(sha512sum "$cli_path")
   remote_=$(wget --timeout 6 -q -O /dev/stdout 'https://raw.githubusercontent.com/ProtonVPN/protonvpn-cli/master/protonvpn-cli.sh')
   if [[ $? != 0 ]]; then
     echo "[!] Error: There is an error updating protonvpn-cli."
@@ -294,7 +298,7 @@ function update_cli() {
   else
     echo "[#] A new update is available."
     echo "[#] Updating..."
-    wget --timeout 20 -O "$cli" 'https://raw.githubusercontent.com/ProtonVPN/protonvpn-cli/master/protonvpn-cli.sh'
+    wget --timeout 20 -O "$cli_path" 'https://raw.githubusercontent.com/ProtonVPN/protonvpn-cli/master/protonvpn-cli.sh'
     if [[ $? == 0 ]]; then
       echo "[#] protonvpn-cli has been updated successfully."
       exit 0
