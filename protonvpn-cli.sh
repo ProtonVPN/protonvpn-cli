@@ -284,7 +284,7 @@ function update_cli() {
     exit 1
   fi
   echo "[#] Checking for update."
-  current_local_hashsum=$(sha512sum "$cli_path")
+  current_local_hashsum=$(sha512sum "$cli_path" | cut -d " " -f1)
   remote_=$(wget --timeout 6 -q -O /dev/stdout 'https://raw.githubusercontent.com/ProtonVPN/protonvpn-cli/master/protonvpn-cli.sh')
   if [[ $? != 0 ]]; then
     echo "[!] Error: There is an error updating protonvpn-cli."
