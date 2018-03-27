@@ -273,6 +273,38 @@ function openvpn_connect() {
   exit 1
 }
 
+function update_cli() {
+  if [[ "$(check_ip)" == "Error." ]]; then
+    echo "[!] Error: There is an internet connection issue."
+    exit 1
+  fi
+  echo "[#] Checking for update."
+  cli="$( cd "$(dirname "$0")" ; pwd -P )/$0"
+  current_local_hashsum=$(sha512sum "$cli")
+  remote_=$(wget --timeout 6 -q -O /dev/stdout 'https://raw.githubusercontent.com/ProtonVPN/protonvpn-cli/master/protonvpn-cli.sh')
+  if [[ $? != 0 ]]; then
+    echo "[!] Error: There is an error updating protonvpn-cli."
+    exit 1
+  fi
+  remote_hashsum=$( echo "$remote_" | sha512sum | cut -d ' ' -f1)
+  
+  if [[ "$current_local_hashsum" == "$remote_hashsum" ]]; then
+    echo "[*] protonvpn-cli is up-to-date!"
+    exit 0
+  else
+    echo "[#] A new update is available."
+    echo "[#] Updating..."
+    wget --timeout 20 -O "$cli" 'https://raw.githubusercontent.com/ProtonVPN/protonvpn-cli/master/protonvpn-cli.sh'
+    if [[ $? == 0 ]]; then
+      echo "[#] protonvpn-cli has been updated successfully."
+      exit 0
+    else
+      echo "[!] Error: There is an error updating protonvpn-cli."
+      exit 1
+    fi
+  fi
+}
+
 function install_cli() {
   mkdir -p "/usr/bin/"
   cli="$( cd "$(dirname "$0")" ; pwd -P )/$0"
@@ -554,6 +586,7 @@ function help_message() {
     echo "   -f, -fastest-connect               Connect to a fast ProtonVPN VPN."
     echo "   -d, -disconnect                    Disconnect from VPN."
     echo "   -ip                                Print the current public IP address."
+    echo "   -update                            Update protonvpn-cli."
     echo "   -install                           Install protonvpn-cli."
     echo "   -uninstall                         Uninstall protonvpn-cli."
     echo "   -h, --help                         Show help message."
@@ -581,6 +614,8 @@ case $user_input in
     fi
     ;;
   "ip"|"-ip"|"--ip") check_ip
+    ;;
+  "update"|"-update"|"--update") update_cli
     ;;
   "-init"|"--init") init_cli
     ;;
