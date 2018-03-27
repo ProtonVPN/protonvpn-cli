@@ -298,7 +298,7 @@ function update_cli() {
   else
     echo "[#] A new update is available."
     echo "[#] Updating..."
-    wget --timeout 20 -O "$cli_path" 'https://raw.githubusercontent.com/ProtonVPN/protonvpn-cli/master/protonvpn-cli.sh'
+    wget -q --timeout 20 -O "$cli_path" 'https://raw.githubusercontent.com/ProtonVPN/protonvpn-cli/master/protonvpn-cli.sh'
     if [[ $? == 0 ]]; then
       echo "[#] protonvpn-cli has been updated successfully."
       exit 0
