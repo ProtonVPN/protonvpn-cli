@@ -56,7 +56,7 @@ function get_home() {
   else
     CURRENT_USER="$SUDO_USER"
   fi
-  USER_HOME=$(getent passwd "$CURRENT_USER" | cut -d: -f6)
+  USER_HOME=$(getent passwd "$CURRENT_USER" 2> /dev/null | cut -d: -f6)
   if [[ -z "$USER_HOME" ]]; then
     USER_HOME="$HOME"
   fi
