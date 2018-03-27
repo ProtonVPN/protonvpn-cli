@@ -42,10 +42,13 @@ $ sudo bash -c "git clone https://github.com/ProtonVPN/protonvpn-cli.git ; ./pro
 | `protonvpn-cli -fastest-connect` | Connect to a fast ProtonVPN VPN.              |
 | `protonvpn-cli -disconnect`      | Disconnect from VPN.                          |
 | `protonvpn-cli -ip`              | Print the current public IP address.          |
+| `protonvpn-cli -update`          | Update protonvpn-cli.                         |
 | `protonvpn-cli -install`         | Install protonvpn-cli.                        |
 | `protonvpn-cli -uninstall`       | Uninstall protonvpn-cli.                      |
 | `protonvpn-cli -help`            | Show help message.                            |
 
+
+protonvpn-cli can also be used by typing `pvpn`, once installed.
 
 
 # Compatibility #
