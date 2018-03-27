@@ -144,37 +144,27 @@ function manage_ipv6() {
       
       #save linklocal address and disable ipv6
       ip -6 a | awk '/inet6 fe80/ {print $2}' > "$(get_home)/.protonvpn-cli/.ipv6_address"
-      if [[ $? != 0 ]]; then
-        errors_counter=$((errors_counter+1))
-      fi
-    
+      if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
+      
       sysctl -w net.ipv6.conf.all.disable_ipv6=1 &> /dev/null
-      if [[ $? != 0 ]]; then
-        errors_counter=$((errors_counter+1))
-      fi
+      if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
       
       sysctl -w net.ipv6.conf.default.disable_ipv6=1 &> /dev/null
-      if [[ $? != 0 ]]; then
-        errors_counter=$((errors_counter+1))
-      fi
+      if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
+
     fi
   fi
 
   if [[ "$1" == "enable" ]]; then
     sysctl -w net.ipv6.conf.all.disable_ipv6=0 &> /dev/null
-    if [[ $? != 0 ]]; then
-      errors_counter=$((errors_counter+1))
-    fi
+    if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
+    
     sysctl -w net.ipv6.conf.default.disable_ipv6=0 &> /dev/null
-    if [[ $? != 0 ]]; then
-      errors_counter=$((errors_counter+1))
-    fi
+    if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
     #restore linklocal on default interface
     ip addr add $(cat "$(get_home)/.protonvpn-cli/.ipv6_address") dev $(ip r | awk '/default/ {print $5}') &> /dev/null
-    if [[ ($? != 0) && ($? != 255) ]]; then
-      errors_counter=$((errors_counter+1))
-    fi
+    if [[ ($? != 0) && ($? != 255) ]]; then errors_counter=$((errors_counter+1)) ; fi
 
   fi
 
@@ -288,29 +278,22 @@ function install_cli() {
   cli="$( cd "$(dirname "$0")" ; pwd -P )/$0"
   errors_counter=0
   cp "$cli" "/usr/local/bin/protonvpn-cli" &> /dev/null
-  if [[ $? != 0 ]]; then
-   errors_counter=$((errors_counter+1))
-  fi
+  if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
+  
   ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" &> /dev/null
-  if [[ $? != 0 ]]; then
-   errors_counter=$((errors_counter+1))
-  fi
+  if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
+  
   ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/bin/protonvpn-cli" &> /dev/null
-  if [[ $? != 0 ]]; then
-   errors_counter=$((errors_counter+1))
-  fi
+  if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
+  
   ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/bin/pvpn" &> /dev/null
-  if [[ $? != 0 ]]; then
-   errors_counter=$((errors_counter+1))
-  fi
+  if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
+  
   chown "$USER:$(id -gn $USER)" "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn" &> /dev/null
-  if [[ $? != 0 ]]; then
-   errors_counter=$((errors_counter+1))
-  fi
+  if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
+  
   chmod 0755 "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn" &> /dev/null
-  if [[ $? != 0 ]]; then
-   errors_counter=$((errors_counter+1))
-  fi
+  if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
   if [[ ($errors_counter == 0) || ( $(which protonvpn-cli) != "" ) ]]; then
     echo "[*] Done."
@@ -322,13 +305,10 @@ function install_cli() {
 function uninstall_cli() {
   errors_counter=0
   rm -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn" &> /dev/null
-  if [[ $? != 0 ]]; then
-   errors_counter=$((errors_counter+1))
-  fi
+  if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
+  
   rm -rf "$(get_home)/.protonvpn-cli/" &> /dev/null
-  if [[ $? != 0 ]]; then
-   errors_counter=$((errors_counter+1))
-  fi
+  if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
   if [[ ($errors_counter == 0) || ( $(which protonvpn-cli) == "" ) ]]; then
     echo "[*] Done."
