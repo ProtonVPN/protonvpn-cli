@@ -139,14 +139,24 @@ function init_cli() {
 function manage_ipv6() {
   # ProtonVPN support for IPv6 coming soon.
   errors_counter=0
-  if [[ "$1" != "disable" ]]; then
-    sysctl -w net.ipv6.conf.all.disable_ipv6=1 &> /dev/null
-    if [[ $? != 0 ]]; then
-      errors_counter=$((errors_counter+1))
-    fi
-    sysctl -w net.ipv6.conf.default.disable_ipv6=1 &> /dev/null
-    if [[ $? != 0 ]]; then
-      errors_counter=$((errors_counter+1))
+  if [[ "$1" == "disable" ]]; then
+    if [ ! -z "$(ip -6 a)" ]; then
+      
+      #save linklocal address and disable ipv6
+      ip -6 a | awk '/inet6 fe80/ {print $2}' > "$(get_home)/.protonvpn-cli/.ipv6_address"
+      if [[ $? != 0 ]]; then
+        errors_counter=$((errors_counter+1))
+      fi
+    
+      sysctl -w net.ipv6.conf.all.disable_ipv6=1 &> /dev/null
+      if [[ $? != 0 ]]; then
+        errors_counter=$((errors_counter+1))
+      fi
+      
+      sysctl -w net.ipv6.conf.default.disable_ipv6=1 &> /dev/null
+      if [[ $? != 0 ]]; then
+        errors_counter=$((errors_counter+1))
+      fi
     fi
   fi
 
@@ -160,10 +170,17 @@ function manage_ipv6() {
       errors_counter=$((errors_counter+1))
     fi
 
-    if [[ $errors_counter != 0 ]]; then
-      echo "[!] There are issues in managing ipv6 in the system. Please test the system for the root cause."
-      echo "Not able to manage ipv6 by protonvpn-cli might cause issues in leaking the system's ipv6 address."
+    #restore linklocal on default interface
+    ip addr add $(cat "$(get_home)/.protonvpn-cli/.ipv6_address") dev $(ip r | awk '/default/ {print $5}') &> /dev/null
+    if [[ ($? != 0) && ($? != 255) ]]; then
+      errors_counter=$((errors_counter+1))
     fi
+
+  fi
+
+  if [[ $errors_counter != 0 ]]; then
+    echo "[!] There are issues in managing ipv6 in the system. Please test the system for the root cause."
+    echo "Not able to manage ipv6 by protonvpn-cli might cause issues in leaking the system's ipv6 address."
   fi
 }
 
