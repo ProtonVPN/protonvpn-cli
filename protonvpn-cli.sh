@@ -347,17 +347,7 @@ function check_if_profile_initialized() {
 }
 
 function connect_to_fastest_vpn() {
-  check_if_profile_initialized
-  if [[ $(is_openvpn_currently_running) == true ]]; then
-    echo "[!] Error: OpenVPN is already running on this machine."
-    exit 1
-  fi
-  if [[ "$(check_ip)" == "Error." ]]; then
-    echo "[!] Error: There is an internet connection issue."
-    exit 1
-  fi
 
-  echo "Fetching ProtonVPN Servers..."
   config_id=$(get_fastest_vpn_connection_id)
   selected_protocol="udp"
   openvpn_connect "$config_id" "$selected_protocol"
@@ -381,9 +371,21 @@ function connect_to_random_vpn() {
   openvpn_connect "$config_id" "$selected_protocol"
 }
 
-function connect_to_server() {
+function connect_to_specific_server() {
+  check_if_profile_initialized
+  if [[ $(is_openvpn_currently_running) == true ]]; then
+    echo "[!] Error: OpenVPN is already running on this machine."
+    exit 1
+  fi
+  if [[ "$(check_ip)" == "Error." ]]; then
+    echo "[!] Error: There is an internet connection issue."
+    exit 1
+  fi
+
+  echo "Fetching ProtonVPN Servers..."
+  
   server_list=$(get_vpn_config_details | tr ' ' '@')
-  if [[ ${2,,} == "tcp" ]]; then
+  if [[ "${2,,}" == "tcp" ]]; then
     protocol="tcp"
   else
     protocol="udp"
@@ -392,12 +394,13 @@ function connect_to_server() {
   for i in $server_list; do
     id=$(echo "$i" | cut -d"@" -f1)
     name=$(echo "$i" | cut -d"@" -f2)
-    if [[ "${name,,}" == ${1,,} ]]; then
-      openvpn_connect $id $protocol
+    if [[ "${name,,}" == "${1,,}" ]]; then
+      openvpn_connect "$id" "$protocol"
     fi
   done
   
-  echo "[!] Error: Invalid server name or server not accessible with your plan."
+  # If not found in $server_list.
+  echo "[!] Error: Invalid server name, or server not accessible with your plan."
   exit 1
 }
 
@@ -594,7 +597,7 @@ case $user_input in
     if [[ $# == 1 ]]; then 
       connection_to_vpn_via_dialog_menu
     elif [[ $# > 1 ]]; then
-      connect_to_server "$2" "$3"
+      connect_to_specific_server "$2" "$3"
     fi
     ;;
   "ip"|"-ip"|"--ip") check_ip
