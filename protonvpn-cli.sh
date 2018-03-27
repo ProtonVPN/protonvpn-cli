@@ -381,6 +381,26 @@ function connect_to_random_vpn() {
   openvpn_connect "$config_id" "$selected_protocol"
 }
 
+function connect_to_server() {
+  server_list=$(get_vpn_config_details | tr ' ' '@')
+  if [[ ${2,,} == "tcp" ]]; then
+    protocol="tcp"
+  else
+    protocol="udp"
+  fi
+
+  for i in $server_list; do
+    id=$(echo "$i" | cut -d"@" -f1)
+    name=$(echo "$i" | cut -d"@" -f2)
+    if [[ "${name,,}" == ${1,,} ]]; then
+      openvpn_connect $id $protocol
+    fi
+  done
+  
+  echo "[!] Error: Invalid server name or server not accessible with your plan."
+  exit 1
+}
+
 function connection_to_vpn_via_dialog_menu() {
   check_if_profile_initialized
   if [[ $(is_openvpn_currently_running) == true ]]; then
@@ -545,16 +565,17 @@ function help_message() {
     echo -e "ProtonVPN Command-Line Tool\n"
     echo -e "Usage: $(basename $0) [option]\n"
     echo "Options:"
-    echo "   -init, --init            Initialize ProtonVPN profile on the machine."
-    echo "   -c, -connect             Select a VPN from ProtonVPN menu."
-    echo "   -r, -random-connect      Connect to a random ProtonVPN VPN."
-    echo "   -f, -fastest-connect     Connect to a fast ProtonVPN VPN."
-    echo "   -d, -disconnect          Disconnect from VPN."
-    echo "   -ip                      Print the current public IP address."
-    echo "   -install                 Install protonvpn-cli."
-    echo "   -uninstall               Uninstall protonvpn-cli."
-    echo "   -h, --help               Show help message."
+    echo "   -init, --init                      Initialize ProtonVPN profile on the machine."
+    echo "   -c, -connect [name [protocol]]     Select a VPN from ProtonVPN menu or connect to a VPN by name"
+    echo "   -r, -random-connect                Connect to a random ProtonVPN VPN."
+    echo "   -f, -fastest-connect               Connect to a fast ProtonVPN VPN."
+    echo "   -d, -disconnect                    Disconnect from VPN."
+    echo "   -ip                                Print the current public IP address."
+    echo "   -install                           Install protonvpn-cli."
+    echo "   -uninstall                         Uninstall protonvpn-cli."
+    echo "   -h, --help                         Show help message."
     echo
+
     exit 0
 }
 
@@ -569,7 +590,12 @@ case $user_input in
     ;;
   "-f"|"--f"|"-fastest"|"--fastest"|"-fastest-connect") connect_to_fastest_vpn
     ;;
-  "-c"|"--c"|"-connect"|"--connect") connection_to_vpn_via_dialog_menu
+  "-c"|"-connect"|"--c"|"--connect") 
+    if [[ $# == 1 ]]; then 
+      connection_to_vpn_via_dialog_menu
+    elif [[ $# > 1 ]]; then
+      connect_to_server "$2" "$3"
+    fi
     ;;
   "ip"|"-ip"|"--ip") check_ip
     ;;
