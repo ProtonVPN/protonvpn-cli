@@ -138,14 +138,32 @@ function init_cli() {
 
 function manage_ipv6() {
   # ProtonVPN support for IPv6 coming soon.
-  if [[ "$1" == "disable" ]]; then
-    sysctl -w net.ipv6.conf.all.disable_ipv6=1 > /dev/null
-    sysctl -w net.ipv6.conf.default.disable_ipv6=1 > /dev/null
+  errors_counter=0
+  if [[ "$1" != "disable" ]]; then
+    sysctl -w net.ipv6.conf.all.disable_ipv6=1 &> /dev/null
+    if [[ $? != 0 ]]; then
+      errors_counter=$((errors_counter+1))
+    fi
+    sysctl -w net.ipv6.conf.default.disable_ipv6=1 &> /dev/null
+    if [[ $? != 0 ]]; then
+      errors_counter=$((errors_counter+1))
+    fi
   fi
 
   if [[ "$1" == "enable" ]]; then
-    sysctl -w net.ipv6.conf.all.disable_ipv6=0 > /dev/null
-    sysctl -w net.ipv6.conf.default.disable_ipv6=0 > /dev/null
+    sysctl -w net.ipv6.conf.all.disable_ipv6=0 &> /dev/null
+    if [[ $? != 0 ]]; then
+      errors_counter=$((errors_counter+1))
+    fi
+    sysctl -w net.ipv6.conf.default.disable_ipv6=0 &> /dev/null
+    if [[ $? != 0 ]]; then
+      errors_counter=$((errors_counter+1))
+    fi
+
+    if [[ $errors_counter != 0 ]]; then
+      echo "[!] There are issues in managing ipv6 in the system. Please test the system for the root cause."
+      echo "Not able to manage ipv6 by protonvpn-cli might cause issues in leaking the system's ipv6 address."
+    fi
   fi
 }
 
