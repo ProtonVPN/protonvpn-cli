@@ -40,6 +40,11 @@ function check_requirements() {
     exit 1
   fi
 
+  if [[ $(which sha512sum) == "" ]]; then
+    echo "[!] Error: sha512sum is not installed. Install \`sha512sum\` package to continue."
+    exit 1
+  fi
+
   if [[ ! -f "/etc/openvpn/update-resolv-conf" ]]; then
     echo "[!] Error: openvpn-resolv-conf is not installed."
     read -p "Would you like protonvpn-cli to install openvpn-resolv-conf? (y/n): " "user_confirm"
