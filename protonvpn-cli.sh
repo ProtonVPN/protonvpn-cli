@@ -102,6 +102,16 @@ function check_ip() {
   echo "$ip"
 }
 
+function cli_debug() {
+  if [[ "$PROTONVPN_CLI_DEBUG" == "true" ]]; then
+    if [[ "$1" == "stdout" ]]; then
+      echo "$2" > "/dev/stdout"
+    elif [[ "$1" == "stderr" ]]; then
+      echo "$2" > "/dev/stderr"
+    fi
+  fi
+}
+
 function init_cli() {
   rm -rf "$(get_home)/.protonvpn-cli/"  # Previous profile will be removed/overwritten, if any.
   mkdir -p "$(get_home)/.protonvpn-cli/"
