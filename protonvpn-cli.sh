@@ -151,7 +151,7 @@ function manage_ipv6() {
   # ProtonVPN support for IPv6 coming soon.
   errors_counter=0
   if [[ "$1" == "disable" ]]; then
-    if [ ! -z "$(ip -6 a)" ]; then
+    if [ ! -z "$(ip -6 a 2> /dev/null)" ]; then
       
       #save linklocal address and disable ipv6
       ip -6 a | awk '/inet6 fe80/ {print $2}' > "$(get_home)/.protonvpn-cli/.ipv6_address"
@@ -432,7 +432,7 @@ function connect_to_specific_server() {
   echo "Fetching ProtonVPN Servers..."
   
   server_list=$(get_vpn_config_details | tr ' ' '@')
-  if [[ "${2,,}" == "tcp" ]]; then
+  if [[ "$(echo "$2" | tr '[:upper:]' '[:lower:]')" == "tcp" ]]; then
     protocol="tcp"
   else
     protocol="udp"
@@ -441,7 +441,7 @@ function connect_to_specific_server() {
   for i in $server_list; do
     id=$(echo "$i" | cut -d"@" -f1)
     name=$(echo "$i" | cut -d"@" -f2)
-    if [[ "${name,,}" == "${1,,}" ]]; then
+    if [[ "$(echo "$1" | tr '[:upper:]' '[:lower:]')" == "$(echo "$name" | tr '[:upper:]' '[:lower:]')"  ]]; then
       openvpn_connect "$id" "$protocol"
     fi
   done
