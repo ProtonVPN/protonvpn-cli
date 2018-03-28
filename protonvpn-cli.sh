@@ -42,6 +42,7 @@ function check_requirements() {
 
   if [[ $(which sha512sum) == "" ]]; then
     echo "[!] Error: sha512sum is not installed. Install \`sha512sum\` package to continue."
+    echo "Also check: https://github.com/ProtonVPN/protonvpn-cli/issues/45 for reference."
     exit 1
   fi
 
