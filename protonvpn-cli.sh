@@ -255,12 +255,22 @@ function openvpn_connect() {
   fi
 
   current_ip="$(check_ip)"
-
-  wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
-    --header 'Accept: application/vnd.protonmail.v1+json' \
-    --timeout 10 -q -O /dev/stdout "https://api.protonmail.ch/vpn/config?Platform=linux&ServerID=$config_id&Protocol=$selected_protocol" \
-    | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_home)/.protonvpn-cli/protonvpn_openvpn_credentials" --auth-nocache
-
+  if [[ "$PROTONVPN_CLI_LOG" == "true" ]]; then  # PROTONVPN_CLI_LOG is retrieved from env.
+    tempfile=$(mktemp --tmpdir protonvpn-cli-logs-XXXXXXXX)
+    if [[ $? != 0 ]]; then echo "[!] Error creating logging file."; exit 1; fi
+    echo "[*] CLI logging mode enabled."
+    echo -e "[*] Saving logs to: $tempfile"
+    
+    wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
+      --header 'Accept: application/vnd.protonmail.v1+json' \
+      --timeout 10 -q -O /dev/stdout "https://api.protonmail.ch/vpn/config?Platform=linux&ServerID=$config_id&Protocol=$selected_protocol" \
+      | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_home)/.protonvpn-cli/protonvpn_openvpn_credentials" --auth-nocache --verb 4 --log-append "$tempfile" &> "$tempfile" 
+  else
+    wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
+      --header 'Accept: application/vnd.protonmail.v1+json' \
+      --timeout 10 -q -O /dev/stdout "https://api.protonmail.ch/vpn/config?Platform=linux&ServerID=$config_id&Protocol=$selected_protocol" \
+      | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_home)/.protonvpn-cli/protonvpn_openvpn_credentials" --auth-nocache
+  fi
   echo "Connecting..."
 
   max_checks=3
@@ -374,7 +384,17 @@ function check_if_profile_initialized() {
 }
 
 function connect_to_fastest_vpn() {
-
+  check_if_profile_initialized
+  if [[ $(is_openvpn_currently_running) == true ]]; then
+    echo "[!] Error: OpenVPN is already running on this machine."
+    exit 1
+  fi
+  if [[ "$(check_ip)" == "Error." ]]; then
+    echo "[!] Error: There is an internet connection issue."
+    exit 1
+  fi
+  
+  echo "Fetching ProtonVPN Servers..."
   config_id=$(get_fastest_vpn_connection_id)
   selected_protocol="udp"
   openvpn_connect "$config_id" "$selected_protocol"
