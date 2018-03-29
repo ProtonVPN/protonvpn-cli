@@ -251,13 +251,21 @@ function openvpn_disconnect() {
           echo "[#] Disconnected."
           echo "[#] Current IP: $(check_ip)"
         fi
-        exit 0
+        
+        if [[ "$2" != "dont_exit" ]]; then
+          exit 0
+        fi
+
       fi
     counter=$((counter+1))
   done
   if [[ "$1" != "quiet" ]]; then
     echo "[!] Error disconnecting OpenVPN."
-    exit 1
+    
+    if [[ "$2" != "dont_exit" ]]; then
+      exit 1
+    fi
+
   fi
 }
 
@@ -384,7 +392,7 @@ function uninstall_cli() {
   if [[ $(is_openvpn_currently_running) == true ]]; then
     echo "[!] OpenVPN is currently running."
     echo "[!] Session will be disconnected."
-    openvpn_disconnect quiet
+    openvpn_disconnect quiet dont_exit
     if [[ $(is_openvpn_currently_running) == true ]]; then  # checking if it OpenVPN is still active.
       echo "[!] Error disconnecting OpenVPN."
       echo "[!] Please disconnect manually and try uninstallation again."
