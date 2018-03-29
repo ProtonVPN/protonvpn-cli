@@ -520,15 +520,11 @@ function get_fastest_vpn_connection_id() {
   output=`python <<END
 import json, random
 json_parsed_response = json.loads("""$response_output""")
-min_load = json_parsed_response["LogicalServers"][0]
-candidates1 = []
-candidates2 = []
-
-candidates1.append(json_parsed_response["LogicalServers"][0])
 
 all_features = {"SECURE_CORE": 1, "TOR": 2, "P2P": 4, "XOR": 8, "IPV6": 16}
 excluded_features_on_fastest_connect = ["TOR"]
 
+candidates_1 = []
 for _ in json_parsed_response["LogicalServers"]:
     server_features_index = int(_["Features"])
     server_features  = []
@@ -541,22 +537,13 @@ for _ in json_parsed_response["LogicalServers"]:
             is_excluded = True
     if is_excluded is True:
         continue
-    if (_["Load"] < min_load["Load"]) and (_["Load"] < 10) and (_["Tier"] <= int("""$tier""")):
-        min_load = _
-        candidates1.append(_)
-if len(candidates1) > 1:
-    candidates1.pop(0)
+    if (_["Tier"] <= int("""$tier""")):
+        candidates_1.append(_)
 
-min_score = candidates1[0]
+candidates_2_size = float(len(candidates_1)) / 100.00 * 5.00
+candidates_2 = sorted(candidates_1, key=lambda l: l["Score"])[:int(round(candidates_2_size))]
 
-for _ in candidates1:
-    if (_["Score"] < min_score["Score"]):
-        candidates2.append(_)
-if len(candidates2) == 0:
-    vpn_connection_id = random.choice(candidates1)["Servers"][0]["ID"]
-else:
-    vpn_connection_id = random.choice(candidates2)["Servers"][0]["ID"]
-
+vpn_connection_id = random.choice(candidates_2)["Servers"][0]["ID"]
 print(vpn_connection_id)
 
 END`
