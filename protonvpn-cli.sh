@@ -174,7 +174,7 @@ function manage_ipv6() {
     if [ ! -z "$(ip -6 a 2> /dev/null)" ]; then
 
       #save linklocal address and disable ipv6
-      ip -6 a | awk '/inet6 fe80/ {print $2}' > "$(get_protonvpn_cli_home)/.ipv6_address"
+      ip -6 a | awk '/^[0-9]/ {DEV=$2}/inet6 fe80/ {print substr(DEV,1,length(DEV)-1) " " $2}' > "$(get_protonvpn_cli_home)/.ipv6_address"
       if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
       sysctl -w net.ipv6.conf.all.disable_ipv6=1 &> /dev/null
@@ -194,8 +194,12 @@ function manage_ipv6() {
     if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
     #restore linklocal on default interface
-    ip addr add $(cat "$(get_protonvpn_cli_home)/.ipv6_address") dev $(ip r | awk '/default/ {print $5}') &> /dev/null
-    if [[ ($? != 0) && ($? != 255) ]]; then errors_counter=$((errors_counter+1)) ; fi
+    #ip addr add $(cat "$(get_protonvpn_cli_home)/.ipv6_address") dev $(ip r | awk '/default/ {print $5}') #&> /dev/null
+    while read -r DEV ADDR; do 
+      ip addr add "$ADDR" dev "$DEV"  &> /dev/null
+      if [[ ($? != 0) && ($? != 2) ]]; then errors_counter=$((errors_counter+1)) ; fi
+    done < "$(get_protonvpn_cli_home)/.ipv6_address"
+    
 
   fi
 
@@ -203,6 +207,8 @@ function manage_ipv6() {
     echo "[!] There are issues in managing ipv6 in the system. Please test the system for the root cause."
     echo "Not able to manage ipv6 by protonvpn-cli might cause issues in leaking the system's ipv6 address."
   fi
+
+  rm -f "$(get_protonvpn_cli_home)/.ipv6_address"
 }
 
 function modify_dns_resolvconf() {
@@ -274,8 +280,10 @@ function openvpn_connect() {
     echo "[!] Error: OpenVPN is already running on this machine."
     exit 1
   fi
-  modify_dns_resolvconf backup_resolvconf # backuping-up current resolv.conf
 
+  modify_dns_resolvconf backup_resolvconf # backuping-up current resolv.conf
+  manage_ipv6 disable # Disabling IPv6 on machine.
+  
   config_id=$1
   selected_protocol=$2
   if [[ $selected_protocol == "" ]]; then
@@ -308,8 +316,6 @@ function openvpn_connect() {
     new_ip="$(check_ip)"
     if [[ ("$current_ip" != "$new_ip") && ("$new_ip" != "Error.") ]]; then
       modify_dns_resolvconf to_protonvpn_dns # Use protonvpn DNS server
-      manage_ipv6 disable # Disabling IPv6 on machine.
-
       echo "[$] Connected!"
       echo "[#] New IP: $new_ip"
       exit 0
