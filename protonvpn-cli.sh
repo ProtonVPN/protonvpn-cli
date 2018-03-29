@@ -124,7 +124,7 @@ function cli_debug() {
 
 function init_cli() {
   if [[ -f "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" ]]; then
-    echo -n "[!] user profile for protonvpn-cli has already been initialized. Would you like to start over with a fresh configuration? [Y/N]: " 
+    echo -n "[!] user profile for protonvpn-cli has already been initialized. Would you like to start over with a fresh configuration? [Y/N]: "
     read "reset_profile"
   fi
   if  [[ ("$reset_profile" == "n" || "$reset_profile" == "N") ]]; then
@@ -172,14 +172,14 @@ function manage_ipv6() {
   errors_counter=0
   if [[ "$1" == "disable" ]]; then
     if [ ! -z "$(ip -6 a 2> /dev/null)" ]; then
-      
+
       #save linklocal address and disable ipv6
       ip -6 a | awk '/inet6 fe80/ {print $2}' > "$(get_protonvpn_cli_home)/.ipv6_address"
       if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
-      
+
       sysctl -w net.ipv6.conf.all.disable_ipv6=1 &> /dev/null
       if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
-      
+
       sysctl -w net.ipv6.conf.default.disable_ipv6=1 &> /dev/null
       if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
@@ -189,7 +189,7 @@ function manage_ipv6() {
   if [[ "$1" == "enable" ]]; then
     sysctl -w net.ipv6.conf.all.disable_ipv6=0 &> /dev/null
     if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
-    
+
     sysctl -w net.ipv6.conf.default.disable_ipv6=0 &> /dev/null
     if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
@@ -280,11 +280,11 @@ function openvpn_connect() {
     if [[ $? != 0 ]]; then echo "[!] Error creating logging file."; exit 1; fi
     echo "[*] CLI logging mode enabled."
     echo -e "[*] Saving logs to: $tempfile"
-    
+
     wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
       --header 'Accept: application/vnd.protonmail.v1+json' \
       --timeout 10 -q -O /dev/stdout "https://api.protonmail.ch/vpn/config?Platform=linux&ServerID=$config_id&Protocol=$selected_protocol" \
-      | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-nocache --verb 4 --log-append "$tempfile" &> "$tempfile" 
+      | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-nocache --verb 4 --log-append "$tempfile" &> "$tempfile"
   else
     wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
       --header 'Accept: application/vnd.protonmail.v1+json' \
@@ -332,7 +332,7 @@ function update_cli() {
     exit 1
   fi
   remote_hashsum=$( echo "$remote_" | sha512sum | cut -d ' ' -f1)
-  
+
   if [[ "$current_local_hashsum" == "$remote_hashsum" ]]; then
     echo "[*] protonvpn-cli is up-to-date!"
     exit 0
@@ -356,19 +356,19 @@ function install_cli() {
   errors_counter=0
   cp "$cli" "/usr/local/bin/protonvpn-cli" &> /dev/null
   if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
-  
+
   ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" &> /dev/null
   if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
-  
+
   ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/bin/protonvpn-cli" &> /dev/null
   if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
-  
+
   ln -s -f "/usr/local/bin/protonvpn-cli" "/usr/bin/pvpn" &> /dev/null
   if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
-  
+
   chown "$USER:$(id -gn $USER)" "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn" &> /dev/null
   if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
-  
+
   chmod 0755 "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn" &> /dev/null
   if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
@@ -383,7 +383,7 @@ function uninstall_cli() {
   errors_counter=0
   rm -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn" &> /dev/null
   if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
-  
+
   rm -rf "$(get_protonvpn_cli_home)/" &> /dev/null
   if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
@@ -413,7 +413,7 @@ function connect_to_fastest_vpn() {
     echo "[!] Error: There is an internet connection issue."
     exit 1
   fi
-  
+
   echo "Fetching ProtonVPN Servers..."
   config_id=$(get_fastest_vpn_connection_id)
   selected_protocol="udp"
@@ -450,7 +450,7 @@ function connect_to_specific_server() {
   fi
 
   echo "Fetching ProtonVPN Servers..."
-  
+
   server_list=$(get_vpn_config_details | tr ' ' '@')
   if [[ "$(echo "$2" | tr '[:upper:]' '[:lower:]')" == "tcp" ]]; then
     protocol="tcp"
@@ -465,7 +465,7 @@ function connect_to_specific_server() {
       openvpn_connect "$id" "$protocol"
     fi
   done
-  
+
   # If not found in $server_list.
   echo "[!] Error: Invalid server name, or server not accessible with your plan."
   exit 1
@@ -532,7 +532,7 @@ function get_fastest_vpn_connection_id() {
     --timeout 20 -q -O /dev/stdout "https://api.protonmail.ch/vpn/logicals")
   tier=$(cat "$(get_protonvpn_cli_home)/protonvpn_tier")
   output=`python <<END
-import json, random
+import json, math, random
 json_parsed_response = json.loads("""$response_output""")
 
 all_features = {"SECURE_CORE": 1, "TOR": 2, "P2P": 4, "XOR": 8, "IPV6": 16}
@@ -555,9 +555,9 @@ for _ in json_parsed_response["LogicalServers"]:
         candidates_1.append(_)
 
 candidates_2_size = float(len(candidates_1)) / 100.00 * 5.00
-candidates_2 = sorted(candidates_1, key=lambda l: l["Score"])[:int(round(candidates_2_size))]
-
-vpn_connection_id = random.choice(candidates_2)["Servers"][0]["ID"]
+candidates_2 = sorted(candidates_1, key=lambda l: l["Score"])[:int(math.ceil(candidates_2_size))]
+random_candidate = random.choice(candidates_2)
+vpn_connection_id = random.choice(random_candidate["Servers"])["ID"]
 print(vpn_connection_id)
 
 END`
@@ -648,8 +648,8 @@ case $user_input in
     ;;
   "-f"|"--f"|"-fastest"|"--fastest"|"-fastest-connect") connect_to_fastest_vpn
     ;;
-  "-c"|"-connect"|"--c"|"--connect") 
-    if [[ $# == 1 ]]; then 
+  "-c"|"-connect"|"--c"|"--connect")
+    if [[ $# == 1 ]]; then
       connection_to_vpn_via_dialog_menu
     elif [[ $# > 1 ]]; then
       connect_to_specific_server "$2" "$3"
