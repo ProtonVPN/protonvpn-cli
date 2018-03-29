@@ -37,11 +37,11 @@ $ sudo bash -c "git clone https://github.com/ProtonVPN/protonvpn-cli.git ; ./pro
 | **Command**                                  | **Description**                               |
 | :------------------------------------------- | :-------------------------------------------- |
 | `protonvpn-cli --init`                       | Initialize ProtonVPN profile on the machine.  |
-| `protonvpn-cli -c, --connect`                | Select a VPN from ProtonVPN menu.             |
-| `protonvpn-cli -c [server-name] [protocol]`  | Connect to a direct ProtonVPN VPN server.     |
-| `protonvpn-cli -r, --random-connect`         | Connect to a random ProtonVPN VPN.            |
-| `protonvpn-cli -f, --fastest-connect`        | Connect to a fast ProtonVPN VPN.              |
-| `protonvpn-cli -d, --disconnect`             | Disconnect from VPN.                          |
+| `protonvpn-cli -c, --connect`                | Select a server from the menu.                |
+| `protonvpn-cli -c [server-name] [protocol]`  | Connect directly to a ProtonVPN server.       |
+| `protonvpn-cli -r, --random-connect`         | Connect to a random ProtonVPN server.         |
+| `protonvpn-cli -f, --fastest-connect`        | Connect to a fast ProtonVPN server.           |
+| `protonvpn-cli -d, --disconnect`             | Disconnect the current session.               |
 | `protonvpn-cli --ip`                         | Print the current public IP address.          |
 | `protonvpn-cli --update`                     | Update protonvpn-cli.                         |
 | `protonvpn-cli --install`                    | Install protonvpn-cli.                        |

@@ -257,7 +257,7 @@ function openvpn_disconnect() {
           echo "[#] Disconnected."
           echo "[#] Current IP: $(check_ip)"
         fi
-        
+
         if [[ "$2" != "dont_exit" ]]; then
           exit 0
         fi
@@ -267,7 +267,7 @@ function openvpn_disconnect() {
   done
   if [[ "$1" != "quiet" ]]; then
     echo "[!] Error disconnecting OpenVPN."
-    
+
     if [[ "$2" != "dont_exit" ]]; then
       exit 1
     fi
@@ -651,15 +651,15 @@ function help_message() {
     echo -e "Usage: $(basename $0) [option]\n"
     echo "Options:"
     echo "   --init                              Initialize ProtonVPN profile on the machine."
-    echo "   -c, --connect [name [protocol]]     Select a VPN from ProtonVPN menu or connect to a VPN by name."
-    echo "   -r, --random-connect                Connect to a random ProtonVPN VPN."
-    echo "   -f, --fastest-connect               Connect to a fast ProtonVPN VPN."
-    echo "   -d, --disconnect                    Disconnect from VPN."
+    echo "   -c, --connect [name [protocol]]     Select a server from the menu or connect by its name."
+    echo "   -r, --random-connect                Connect to a random ProtonVPN server."
+    echo "   -f, --fastest-connect               Connect to a fast ProtonVPN server."
+    echo "   -d, --disconnect                    Disconnect the current session."
     echo "   --ip                                Print the current public IP address."
     echo "   --update                            Update protonvpn-cli."
     echo "   --install                           Install protonvpn-cli."
     echo "   --uninstall                         Uninstall protonvpn-cli."
-    echo "   -h, --help                          Show help message."
+    echo "   -h, --help                          Show this help message."
     echo
 
     exit 0
