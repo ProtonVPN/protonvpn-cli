@@ -195,11 +195,11 @@ function manage_ipv6() {
 
     #restore linklocal on default interface
     #ip addr add $(cat "$(get_protonvpn_cli_home)/.ipv6_address") dev $(ip r | awk '/default/ {print $5}') #&> /dev/null
-    while read -r DEV ADDR; do 
+    while read -r DEV ADDR; do
       ip addr add "$ADDR" dev "$DEV"  &> /dev/null
       if [[ ($? != 0) && ($? != 2) ]]; then errors_counter=$((errors_counter+1)) ; fi
     done < "$(get_protonvpn_cli_home)/.ipv6_address"
-    
+
 
   fi
 
@@ -283,7 +283,7 @@ function openvpn_connect() {
 
   modify_dns_resolvconf backup_resolvconf # backuping-up current resolv.conf
   manage_ipv6 disable # Disabling IPv6 on machine.
-  
+
   config_id=$1
   selected_protocol=$2
   if [[ $selected_protocol == "" ]]; then
@@ -651,9 +651,10 @@ function help_message() {
     echo -e "Usage: $(basename $0) [option]\n"
     echo "Options:"
     echo "   --init                              Initialize ProtonVPN profile on the machine."
-    echo "   -c, --connect [name [protocol]]     Select a server from the menu or connect by its name."
+    echo "   -c, --connect                       Select and connect to a ProtonVPN server."
+    echo "   -c [server-name] [protocol]         Connect to a ProtonVPN server by name."
     echo "   -r, --random-connect                Connect to a random ProtonVPN server."
-    echo "   -f, --fastest-connect               Connect to a fast ProtonVPN server."
+    echo "   -f, --fastest-connect               Connect to the fastest available ProtonVPN server."
     echo "   -d, --disconnect                    Disconnect the current session."
     echo "   --ip                                Print the current public IP address."
     echo "   --update                            Update protonvpn-cli."
