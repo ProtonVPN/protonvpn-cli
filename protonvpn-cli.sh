@@ -384,26 +384,13 @@ function uninstall_cli() {
   if [[ $(is_openvpn_currently_running) == true ]]; then
     echo "[!] OpenVPN is currently running."
     echo "[!] Session will be disconnected."
-        
-    max_checks=3
-    counter=0
-
-    while [[ $counter -lt $max_checks ]]; do
-        pkill -f openvpn
-        sleep 0.50
-        if [[ $(is_openvpn_currently_running) == false ]]; then
-          modify_dns_resolvconf revert_to_backup # Reverting to original resolv.conf
-          manage_ipv6 enable # Enabling IPv6 on machine.
-          echo "[#] Disconnected."
-          echo "[#] Current IP: $(check_ip)"
-          break
-        fi
-      counter=$((counter+1))
-    done
-    if [[ $counter -ge $max_checks ]]; then
+    openvpn_disconnect quiet
+    if [[ $(is_openvpn_currently_running) == true ]]; then  # checking if it OpenVPN is still active.
       echo "[!] Error disconnecting OpenVPN."
       echo "[!] Please disconnect manually and try uninstallation again."
       exit 1
+    else
+      echo "[#] Disconnected."
     fi
   fi
 
