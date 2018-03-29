@@ -380,6 +380,33 @@ function install_cli() {
 }
 
 function uninstall_cli() {
+
+  if [[ $(is_openvpn_currently_running) == true ]]; then
+    echo "[!] OpenVPN is currently running."
+    echo "[!] Session will be disconnected."
+        
+    max_checks=3
+    counter=0
+
+    while [[ $counter -lt $max_checks ]]; do
+        pkill -f openvpn
+        sleep 0.50
+        if [[ $(is_openvpn_currently_running) == false ]]; then
+          modify_dns_resolvconf revert_to_backup # Reverting to original resolv.conf
+          manage_ipv6 enable # Enabling IPv6 on machine.
+          echo "[#] Disconnected."
+          echo "[#] Current IP: $(check_ip)"
+          break
+        fi
+      counter=$((counter+1))
+    done
+    if [[ $counter -ge $max_checks ]]; then
+      echo "[!] Error disconnecting OpenVPN."
+      echo "[!] Please disconnect manually and try uninstallation again."
+      exit 1
+    fi
+  fi
+
   errors_counter=0
   rm -f "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn" &> /dev/null
   if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
