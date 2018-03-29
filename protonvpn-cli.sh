@@ -398,7 +398,7 @@ function check_if_profile_initialized() {
   _=$(cat "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" "$(get_protonvpn_cli_home)/protonvpn_tier" &> /dev/null)
   if [[ $? != 0 ]]; then
     echo "[!] Profile is not initialized."
-    echo -e "Initialize your profile using: \n    $(basename $0) -init"
+    echo -e "Initialize your profile using: \n    $(basename $0) --init"
     exit 1
   fi
 }
@@ -622,16 +622,16 @@ function help_message() {
     echo -e "ProtonVPN Command-Line Tool\n"
     echo -e "Usage: $(basename $0) [option]\n"
     echo "Options:"
-    echo "   -init, --init                      Initialize ProtonVPN profile on the machine."
-    echo "   -c, -connect [name [protocol]]     Select a VPN from ProtonVPN menu or connect to a VPN by name"
-    echo "   -r, -random-connect                Connect to a random ProtonVPN VPN."
-    echo "   -f, -fastest-connect               Connect to a fast ProtonVPN VPN."
-    echo "   -d, -disconnect                    Disconnect from VPN."
-    echo "   -ip                                Print the current public IP address."
-    echo "   -update                            Update protonvpn-cli."
-    echo "   -install                           Install protonvpn-cli."
-    echo "   -uninstall                         Uninstall protonvpn-cli."
-    echo "   -h, --help                         Show help message."
+    echo "   --init                              Initialize ProtonVPN profile on the machine."
+    echo "   -c, --connect [name [protocol]]     Select a VPN from ProtonVPN menu or connect to a VPN by name."
+    echo "   -r, --random-connect                Connect to a random ProtonVPN VPN."
+    echo "   -f, --fastest-connect               Connect to a fast ProtonVPN VPN."
+    echo "   -d, --disconnect                    Disconnect from VPN."
+    echo "   --ip                                Print the current public IP address."
+    echo "   --update                            Update protonvpn-cli."
+    echo "   --install                           Install protonvpn-cli."
+    echo "   --uninstall                         Uninstall protonvpn-cli."
+    echo "   -h, --help                          Show help message."
     echo
 
     exit 0

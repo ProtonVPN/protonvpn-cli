@@ -23,30 +23,30 @@ The program automatically checks for missing requirements.
 ```bash
 $ git clone "https://github.com/protonvpn/protonvpn-cli"
 $ cd protonvpn-cli
-$ sudo ./protonvpn-cli.sh -install
+$ sudo ./protonvpn-cli.sh --install
 ```
 
 ### Or (one-liner): ###
 
 ```bash
-$ sudo bash -c "git clone https://github.com/ProtonVPN/protonvpn-cli.git ; ./protonvpn-cli/protonvpn-cli.sh -install"
+$ sudo bash -c "git clone https://github.com/ProtonVPN/protonvpn-cli.git ; ./protonvpn-cli/protonvpn-cli.sh --install"
 ```
 
 # Usage #
 
-
-| **Command**                      | **Description**                               |
-| :------------------------------- | :-------------------------------------------- |
-| `protonvpn-cli -init`            | Initialize ProtonVPN profile on the machine.  |
-| `protonvpn-cli -connect`         | Select a VPN from ProtonVPN menu.             |
-| `protonvpn-cli -random-connect`  | Connect to a random ProtonVPN VPN.            |
-| `protonvpn-cli -fastest-connect` | Connect to a fast ProtonVPN VPN.              |
-| `protonvpn-cli -disconnect`      | Disconnect from VPN.                          |
-| `protonvpn-cli -ip`              | Print the current public IP address.          |
-| `protonvpn-cli -update`          | Update protonvpn-cli.                         |
-| `protonvpn-cli -install`         | Install protonvpn-cli.                        |
-| `protonvpn-cli -uninstall`       | Uninstall protonvpn-cli.                      |
-| `protonvpn-cli -help`            | Show help message.                            |
+| **Command**                                  | **Description**                               |
+| :------------------------------------------- | :-------------------------------------------- |
+| `protonvpn-cli --init`                       | Initialize ProtonVPN profile on the machine.  |
+| `protonvpn-cli -c, --connect`                | Select a VPN from ProtonVPN menu.             |
+| `protonvpn-cli -c [server-name] [protocol]`  | Connect to a direct ProtonVPN VPN server.     |
+| `protonvpn-cli -r, --random-connect`         | Connect to a random ProtonVPN VPN.            |
+| `protonvpn-cli -f, --fastest-connect`        | Connect to a fast ProtonVPN VPN.              |
+| `protonvpn-cli -d, --disconnect`             | Disconnect from VPN.                          |
+| `protonvpn-cli --ip`                         | Print the current public IP address.          |
+| `protonvpn-cli --update`                     | Update protonvpn-cli.                         |
+| `protonvpn-cli --install`                    | Install protonvpn-cli.                        |
+| `protonvpn-cli --uninstall`                  | Uninstall protonvpn-cli.                      |
+| `protonvpn-cli --help`                       | Show help message.                            |
 
 
 protonvpn-cli can also be used by typing `pvpn`, once installed.
