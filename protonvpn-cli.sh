@@ -186,7 +186,11 @@ function manage_ipv6() {
     fi
   fi
 
-  if [[ "$1" == "enable" ]]; then
+  if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_address" ) ]]; then
+    echo "[!] This is an error in enabling ipv6 on the machine. Please enable it manually."
+  fi
+
+  if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_address" ) ]]; then
     sysctl -w net.ipv6.conf.all.disable_ipv6=0 &> /dev/null
     if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
@@ -194,21 +198,21 @@ function manage_ipv6() {
     if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
     #restore linklocal on default interface
-    #ip addr add $(cat "$(get_protonvpn_cli_home)/.ipv6_address") dev $(ip r | awk '/default/ {print $5}') #&> /dev/null
     while read -r DEV ADDR; do
       ip addr add "$ADDR" dev "$DEV"  &> /dev/null
       if [[ ($? != 0) && ($? != 2) ]]; then errors_counter=$((errors_counter+1)) ; fi
     done < "$(get_protonvpn_cli_home)/.ipv6_address"
 
+    rm -f "$(get_protonvpn_cli_home)/.ipv6_address"
 
   fi
+  
 
   if [[ $errors_counter != 0 ]]; then
     echo "[!] There are issues in managing ipv6 in the system. Please test the system for the root cause."
     echo "Not able to manage ipv6 by protonvpn-cli might cause issues in leaking the system's ipv6 address."
   fi
 
-  rm -f "$(get_protonvpn_cli_home)/.ipv6_address"
 }
 
 function modify_dns_resolvconf() {
