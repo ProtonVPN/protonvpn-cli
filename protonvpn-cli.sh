@@ -673,9 +673,9 @@ case $user_input in
     ;;
   "-d"|"--d"|"-disconnect"|"--disconnect") openvpn_disconnect
     ;;
-  "-r"|"--r"|"-random"|"--random"|"-random-connect") connect_to_random_vpn
+  "-r"|"--r"|"-random"|"--random"|"-random-connect"|"--random-connect") connect_to_random_vpn
     ;;
-  "-f"|"--f"|"-fastest"|"--fastest"|"-fastest-connect") connect_to_fastest_vpn
+  "-f"|"--f"|"-fastest"|"--fastest"|"-fastest-connect"|"--fastest-connect") connect_to_fastest_vpn
     ;;
   "-c"|"-connect"|"--c"|"--connect")
     if [[ $# == 1 ]]; then
