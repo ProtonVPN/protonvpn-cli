@@ -55,3 +55,7 @@ protonvpn-cli can also be used by typing `pvpn`, once installed.
 # Compatibility #
 * Linux
 * macOS
+
+# License #
+
+protonvpn-cli is released under the MIT license.
