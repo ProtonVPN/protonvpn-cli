@@ -371,7 +371,7 @@ function update_cli() {
 }
 
 function install_cli() {
-  mkdir -p "/usr/bin/"
+  mkdir -p "/usr/bin/" "/usr/local/bin/"
   cli="$( cd "$(dirname "$0")" ; pwd -P )/$0"
   errors_counter=0
   cp "$cli" "/usr/local/bin/protonvpn-cli" &> /dev/null
