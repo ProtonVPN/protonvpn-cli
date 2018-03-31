@@ -81,15 +81,17 @@ function install_openvpn_update_resolv_conf() {
   fi
   echo "[*] Installing openvpn-update-resolv-conf"
   mkdir -p "/etc/openvpn/"
+  file_sha512sum="81cf5ed20ec2a2f47f970bb0185fffb3e719181240f2ca3187dbee1f4d102ce63ab048ffee9daa6b68c96ac59d1d86ad4de2b1cfaf77f1b1f1918d143e96a588"
   wget "https://raw.githubusercontent.com/ProtonVPN/scripts/master/update-resolv-conf.sh" -O "/etc/openvpn/update-resolv-conf"
-  if [[ $? != 0 ]]; then
-    echo "[!] Error installing openvpn-update-resolv-conf"
-    exit 1
-  else
+  if [[ ($? == 0) && ($(sha512sum "/etc/openvpn/update-resolv-conf" | cut -d " " -f1) == "$file_sha512sum")  ]]; then
     chmod +x "/etc/openvpn/update-resolv-conf"
     echo "[*] Done."
+  else
+    echo "[!] Error installing openvpn-update-resolv-conf"
+    exit 1
   fi
 }
+
 
 function check_ip() {
   counter=0
