@@ -169,10 +169,22 @@ function init_cli() {
 
 }
 
+function detect_machine_type() {
+  unameOut="$(uname -s)"
+  case "${unameOut}" in
+    Linux*)     machine=Linux;;
+    Darwin*)    machine=Mac;;
+    CYGWIN*)    machine=Cygwin;;
+    MINGW*)     machine=MinGw;;
+    *)          machine="UNKNOWN"
+  esac
+  echo "$machine"
+}
+
 function manage_ipv6() {
   # ProtonVPN support for IPv6 coming soon.
   errors_counter=0
-  if [[ "$1" == "disable" ]]; then
+  if [[ ("$1" == "disable") && ( $(detect_machine_type) != "Mac" ) ]]; then
     if [ ! -z "$(ip -6 a 2> /dev/null)" ]; then
 
       #save linklocal address and disable ipv6
@@ -188,11 +200,15 @@ function manage_ipv6() {
     fi
   fi
 
-  if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_address" ) ]]; then
+  #if [[ ("$1" == "disable") &&  ( $(detect_machine_type) == "Mac" ) ]]; then
+  #  ToDo: Support for macOS
+  #fi
+
+  if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_address" ) && ( $(detect_machine_type) != "Mac" ) ]]; then
     echo "[!] This is an error in enabling ipv6 on the machine. Please enable it manually."
   fi
 
-  if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_address" ) ]]; then
+  if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_address" ) && ( $(detect_machine_type) != "Mac" ) ]]; then
     sysctl -w net.ipv6.conf.all.disable_ipv6=0 &> /dev/null
     if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
@@ -209,6 +225,9 @@ function manage_ipv6() {
 
   fi
   
+  #if [[ ("$1" == "enable") &&  ( $(detect_machine_type) == "Mac" ) ]]; then
+  #  ToDo: Support for macOS
+  #fi
 
   if [[ $errors_counter != 0 ]]; then
     echo "[!] There are issues in managing ipv6 in the system. Please test the system for the root cause."
@@ -219,11 +238,15 @@ function manage_ipv6() {
 
 function modify_dns_resolvconf() {
 
-  if [[ "$1" == "backup_resolvconf" ]]; then
+  if [[ ("$1" == "backup_resolvconf") &&  ( $(detect_machine_type) != "Mac" ) ]]; then
     cp "/etc/resolv.conf" "/etc/resolv.conf.protonvpn_backup" # backing-up current resolv.conf
   fi
 
-  if [[ "$1" == "to_protonvpn_dns" ]]; then
+  #if [[ ("$1" == "backup_resolvconf") &&  ( $(detect_machine_type) == "Mac" ) ]]; then
+  #  ToDo: Support for macOS
+  #fi
+
+  if [[ ("$1" == "to_protonvpn_dns") &&  ( $(detect_machine_type) != "Mac") ]]; then
     if [[ $(cat "$(get_protonvpn_cli_home)/protonvpn_tier") == "0" ]]; then
       dns_server="10.8.0.1" # free tier dns
     else
@@ -232,9 +255,17 @@ function modify_dns_resolvconf() {
     echo -e "# ProtonVPN DNS - protonvpn-cli\nnameserver $dns_server" > "/etc/resolv.conf"
   fi
 
-  if [[ "$1" == "revert_to_backup" ]]; then
+  #if [[ ("$1" == "to_protonvpn_dns") &&  ( $(detect_machine_type) == "Mac" ) ]]; then
+  #  ToDo: Support for macOS
+  #fi
+  
+  if [[ "$1" == "revert_to_backup" &&  ( $(detect_machine_type) != "Mac" )  ]]; then
     cp "/etc/resolv.conf.protonvpn_backup" "/etc/resolv.conf"
   fi
+
+  #if [[ ("$1" == "revert_to_backup") &&  ( $(detect_machine_type) == "Mac" ) ]]; then
+  #  ToDo: Support for macOS
+  #fi
 }
 
 function is_openvpn_currently_running() {
