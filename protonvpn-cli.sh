@@ -46,7 +46,7 @@ function check_requirements() {
     exit 1
   fi
 
-  if [[ ! -f "/etc/openvpn/update-resolv-conf" ]]; then
+  if [[ ! -x "/etc/openvpn/update-resolv-conf" ]]; then
     echo "[!] Error: openvpn-resolv-conf is not installed."
     read -p "Would you like protonvpn-cli to install openvpn-resolv-conf? (y/n): " "user_confirm"
     if [[ "$user_confirm" == "y" ]]; then
