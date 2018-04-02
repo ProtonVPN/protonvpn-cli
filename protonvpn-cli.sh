@@ -71,7 +71,7 @@ function get_home() {
 }
 
 function get_protonvpn_cli_home() {
-  echo "$(get_home)/.protonvpn-cli/"
+  echo "$(get_home)/.protonvpn-cli"
 }
 
 function install_openvpn_update_resolv_conf() {
@@ -187,7 +187,7 @@ function manage_ipv6() {
   if [[ ("$1" == "disable") && ( $(detect_machine_type) != "Mac" ) ]]; then
     if [ ! -z "$(ip -6 a 2> /dev/null)" ]; then
 
-      #save linklocal address and disable ipv6
+      # Save linklocal address and disable IPv6.
       ip -6 a | awk '/^[0-9]/ {DEV=$2}/inet6 fe80/ {print substr(DEV,1,length(DEV)-1) " " $2}' > "$(get_protonvpn_cli_home)/.ipv6_address"
       if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
@@ -200,9 +200,26 @@ function manage_ipv6() {
     fi
   fi
 
-  #if [[ ("$1" == "disable") &&  ( $(detect_machine_type) == "Mac" ) ]]; then
-  #  ToDo: Support for macOS
-  #fi
+  # Disable IPv6 in macOS.
+  if [[ ("$1" == "disable") &&  ( $(detect_machine_type) == "Mac" ) ]]; then
+    # Get list of services and remove the first line which contains a heading.
+    ipv6_services="$( networksetup  -listallnetworkservices | sed -e '1,1d')"
+
+    # Go through the list disabling IPv6 for enabled services, and outputting lines with the names of the services.
+    echo %s "$ipv6_services" | \
+
+    while read ipv6_service ; do
+      # If first character of a line is an asterisk, the service is disabled, so we skip it.
+      if [[ "${ipv6_service:0:1}" != "*" ]] ; then
+        ipv6_status="$( networksetup -getinfo "$ipv6_service" | grep 'IPv6: ' | sed -e 's/IPv6: //')"
+        if [[ "$ipv6_status" = "Automatic" ]] ; then
+          networksetup -setv6off "$ipv6_service"
+          echo "$ipv6_service" >> "$(get_protonvpn_cli_home)/.ipv6_services"
+        fi
+      fi
+    done
+
+  fi
 
   if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_address" ) && ( $(detect_machine_type) != "Mac" ) ]]; then
     echo "[!] This is an error in enabling ipv6 on the machine. Please enable it manually."
@@ -215,25 +232,34 @@ function manage_ipv6() {
     sysctl -w net.ipv6.conf.default.disable_ipv6=0 &> /dev/null
     if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
-    #restore linklocal on default interface
+    # Restore linklocal on default interface.
     while read -r DEV ADDR; do
       ip addr add "$ADDR" dev "$DEV"  &> /dev/null
       if [[ ($? != 0) && ($? != 2) ]]; then errors_counter=$((errors_counter+1)) ; fi
     done < "$(get_protonvpn_cli_home)/.ipv6_address"
 
     rm -f "$(get_protonvpn_cli_home)/.ipv6_address"
-
   fi
-  
-  #if [[ ("$1" == "enable") &&  ( $(detect_machine_type) == "Mac" ) ]]; then
-  #  ToDo: Support for macOS
-  #fi
+
+  # Restore IPv6 in macOS.
+  if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_services" ) && ( $(detect_machine_type) == "Mac" ) ]]; then
+    if [[ $(cat "$(get_protonvpn_cli_home)/.ipv6_services") == "" ]] ; then
+      return
+    fi
+
+    ipv6_service=$(cat "$(get_protonvpn_cli_home)/.ipv6_services")
+
+    while read ipv6_service ; do
+      networksetup -setv6automatic "$ipv6_service"
+    done < "$(get_protonvpn_cli_home)/.ipv6_services"
+
+    rm -f "$(get_protonvpn_cli_home)/.ipv6_services"
+  fi
 
   if [[ $errors_counter != 0 ]]; then
     echo "[!] There are issues in managing ipv6 in the system. Please test the system for the root cause."
     echo "Not able to manage ipv6 by protonvpn-cli might cause issues in leaking the system's ipv6 address."
   fi
-
 }
 
 function modify_dns_resolvconf() {
@@ -258,7 +284,7 @@ function modify_dns_resolvconf() {
   #if [[ ("$1" == "to_protonvpn_dns") &&  ( $(detect_machine_type) == "Mac" ) ]]; then
   #  ToDo: Support for macOS
   #fi
-  
+
   if [[ "$1" == "revert_to_backup" &&  ( $(detect_machine_type) != "Mac" )  ]]; then
     cp "/etc/resolv.conf.protonvpn_backup" "/etc/resolv.conf"
   fi
