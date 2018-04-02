@@ -241,6 +241,11 @@ function manage_ipv6() {
     rm -f "$(get_protonvpn_cli_home)/.ipv6_address"
   fi
 
+
+  if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_services" ) && ( $(detect_machine_type) == "Mac" ) ]]; then
+    echo "[!] This is an error in enabling ipv6 on the machine. Please enable it manually."
+  fi
+
   # Restore IPv6 in macOS.
   if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_services" ) && ( $(detect_machine_type) == "Mac" ) ]]; then
     if [[ $(cat "$(get_protonvpn_cli_home)/.ipv6_services") == "" ]] ; then
