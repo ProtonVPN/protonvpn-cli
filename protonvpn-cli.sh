@@ -241,9 +241,8 @@ function manage_ipv6() {
     rm -f "$(get_protonvpn_cli_home)/.ipv6_address"
   fi
 
-
   if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_services" ) && ( $(detect_machine_type) == "Mac" ) ]]; then
-    echo "[!] This is an error in enabling ipv6 on the machine. Please enable it manually."
+    echo "[!] This is an error in enabling IPv6 on the machine. Please enable it manually."
   fi
 
   # Restore IPv6 in macOS.
@@ -262,8 +261,8 @@ function manage_ipv6() {
   fi
 
   if [[ $errors_counter != 0 ]]; then
-    echo "[!] There are issues in managing ipv6 in the system. Please test the system for the root cause."
-    echo "Not able to manage ipv6 by protonvpn-cli might cause issues in leaking the system's ipv6 address."
+    echo "[!] There are issues in managing IPv6 in the system. Please test the system for the root cause."
+    echo "Not being able to manage IPv6 by protonvpn-cli might cause issues in leaking the system's IPv6 address."
   fi
 }
 
