@@ -360,7 +360,7 @@ function openvpn_connect() {
 
   current_ip="$(check_ip)"
   if [[ "$PROTONVPN_CLI_LOG" == "true" ]]; then  # PROTONVPN_CLI_LOG is retrieved from env.
-    tempfile=$(mktemp --tmpdir protonvpn-cli-logs-XXXXXXXX)
+    tempfile=$(mktemp -t protonvpn-cli-logs-XXXXXXXX)
     if [[ $? != 0 ]]; then echo "[!] Error creating logging file."; exit 1; fi
     echo "[*] CLI logging mode enabled."
     echo -e "[*] Saving logs to: $tempfile"
