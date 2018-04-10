@@ -124,6 +124,18 @@ function cli_debug() {
   fi
 }
 
+function create_vi_bindings() {
+    echo -en "
+bindkey menubox \\j ITEM_NEXT
+bindkey menubox \\k ITEM_PREV
+bindkey menubox \\q ESC
+bindkey menubox \\g PAGE_FIRST
+bindkey menubox \\G PAGE_LAST
+bindkey menubox \\l FIELD_NEXT
+bindkey menubox \\h FIELD_NEXT
+" > "$(get_protonvpn_cli_home)/dialogrc"
+}
+
 function init_cli() {
   if [[ -f "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" ]]; then
     echo -n "[!] user profile for protonvpn-cli has already been initialized. Would you like to start over with a fresh configuration? [Y/N]: "
@@ -136,6 +148,8 @@ function init_cli() {
 
   rm -rf "$(get_protonvpn_cli_home)/"  # Previous profile will be removed/overwritten, if any.
   mkdir -p "$(get_protonvpn_cli_home)/"
+
+  create_vi_bindings
 
   read -p "Enter OpenVPN username: " "openvpn_username"
   read -s -p "Enter OpenVPN password: " "openvpn_password"
@@ -592,6 +606,11 @@ function connection_to_vpn_via_dialog_menu() {
     ARRAY+=($counter)
     ARRAY+=($data)
   done
+
+  # Set DIALOGRC to a custom file including VI key binding
+  if [[ -f "$(get_protonvpn_cli_home)/dialogrc" ]]; then
+      export DIALOGRC="$(get_protonvpn_cli_home)/dialogrc"
+  fi
 
   config_id=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
     --menu "ID - Name - Country - Load - EntryIP - ExitIP - Features" 35 300 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
