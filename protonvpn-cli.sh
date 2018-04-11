@@ -328,12 +328,15 @@ function openvpn_disconnect() {
     echo "Disconnecting..."
   fi
 
+  if [[ $(is_openvpn_currently_running) == true ]]; then
+    manage_ipv6 enable # Enabling IPv6 on machine.
+  fi
+
   while [[ $counter -lt $max_checks ]]; do
       pkill -f openvpn
       sleep 0.50
       if [[ $(is_openvpn_currently_running) == false ]]; then
         modify_dns_resolvconf revert_to_backup # Reverting to original resolv.conf
-        manage_ipv6 enable # Enabling IPv6 on machine.
         if [[ "$1" != "quiet" ]]; then
           echo "[#] Disconnected."
           echo "[#] Current IP: $(check_ip)"
