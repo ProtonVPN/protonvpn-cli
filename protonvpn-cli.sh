@@ -104,8 +104,8 @@ function check_ip() {
     if [[ $counter -lt 3 ]]; then
       ip=$(wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
         --header 'Accept: application/vnd.protonmail.v1+json' \
-        --timeout 6 -q -O /dev/stdout 'https://api.protonmail.ch/vpn/location' \
-        | awk -F'"' '$2 == "IP" { print $4 }')
+        --timeout 3 -q -O /dev/stdout 'https://api.protonmail.ch/vpn/location' \
+        | python -c 'import json; _ = open("/dev/stdin", "r").read(); _ if len(_) > 0 else "{\"IP\" : \"\"}"; print(json.loads(_)["IP"])')
       counter=$((counter+1))
     else
       ip="Error."
