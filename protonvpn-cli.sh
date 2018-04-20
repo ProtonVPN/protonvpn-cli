@@ -40,9 +40,10 @@ function check_requirements() {
     exit 1
   fi
 
-  if [[ $(which sha512sum) == "" ]]; then
+  sha512sum_func
+  if [[ "$sha512sum_tool" == "" ]]; then
     echo "[!] Error: sha512sum is not installed. Install \`sha512sum\` package to continue."
-    echo "Also check: https://github.com/ProtonVPN/protonvpn-cli/issues/45 for reference."
+    #echo "Also check: https://github.com/ProtonVPN/protonvpn-cli/issues/45 for reference."
     exit 1
   fi
 
@@ -70,6 +71,14 @@ function get_home() {
   echo "$USER_HOME"
 }
 
+function sha512sum_func() {
+  if [[ $(which sha512sum) != "" ]]; then
+    export sha512sum_tool="$(which sha512sum)"
+  elif [[ $(which shasum) != "" ]]; then
+    export sha512sum_tool="$(which shasum) -a 512 "
+  fi
+}
+
 function get_protonvpn_cli_home() {
   echo "$(get_home)/.protonvpn-cli"
 }
@@ -83,7 +92,7 @@ function install_openvpn_update_resolv_conf() {
   mkdir -p "/etc/openvpn/"
   file_sha512sum="81cf5ed20ec2a2f47f970bb0185fffb3e719181240f2ca3187dbee1f4d102ce63ab048ffee9daa6b68c96ac59d1d86ad4de2b1cfaf77f1b1f1918d143e96a588"
   wget "https://raw.githubusercontent.com/ProtonVPN/scripts/master/update-resolv-conf.sh" -O "/etc/openvpn/update-resolv-conf"
-  if [[ ($? == 0) && ($(sha512sum "/etc/openvpn/update-resolv-conf" | cut -d " " -f1) == "$file_sha512sum")  ]]; then
+  if [[ ($? == 0) && ($($sha512sum_tool "/etc/openvpn/update-resolv-conf" | cut -d " " -f1) == "$file_sha512sum")  ]]; then
     chmod +x "/etc/openvpn/update-resolv-conf"
     echo "[*] Done."
   else
@@ -425,13 +434,13 @@ function update_cli() {
     exit 1
   fi
   echo "[#] Checking for update."
-  current_local_hashsum=$(sha512sum "$cli_path" | cut -d " " -f1)
+  current_local_hashsum=$($sha512sum_tool "$cli_path" | cut -d " " -f1)
   remote_=$(wget --timeout 6 -q -O /dev/stdout 'https://raw.githubusercontent.com/ProtonVPN/protonvpn-cli/master/protonvpn-cli.sh')
   if [[ $? != 0 ]]; then
     echo "[!] Error: There is an error updating protonvpn-cli."
     exit 1
   fi
-  remote_hashsum=$( echo "$remote_" | sha512sum | cut -d ' ' -f1)
+  remote_hashsum=$( echo "$remote_" | $sha512sum_tool | cut -d ' ' -f1)
 
   if [[ "$current_local_hashsum" == "$remote_hashsum" ]]; then
     echo "[*] protonvpn-cli is up-to-date!"
