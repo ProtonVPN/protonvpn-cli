@@ -48,10 +48,10 @@ function check_requirements() {
   fi
 
   if [[ ! -x "/etc/openvpn/update-resolv-conf" ]]; then
-    echo "[!] Error: openvpn-resolv-conf is not installed."
-    read -p "Would you like protonvpn-cli to install openvpn-resolv-conf? (y/n): " "user_confirm"
+    echo "[!] Error: update-resolv-conf is not installed."
+    read -p "Would you like protonvpn-cli to install update-resolv-conf? (y/n): " "user_confirm"
     if [[ "$user_confirm" == "y" ]]; then
-      install_openvpn_update_resolv_conf
+      install_update_resolv_conf
     else
       exit 1
     fi
@@ -83,12 +83,12 @@ function get_protonvpn_cli_home() {
   echo "$(get_home)/.protonvpn-cli"
 }
 
-function install_openvpn_update_resolv_conf() {
+function install_update_resolv_conf() {
   if [[ ("$UID" != 0) ]]; then
     echo "[!] Error: installation requires root access."
     exit 1
   fi
-  echo "[*] Installing openvpn-update-resolv-conf"
+  echo "[*] Installing update-resolv-conf..."
   mkdir -p "/etc/openvpn/"
   file_sha512sum="81cf5ed20ec2a2f47f970bb0185fffb3e719181240f2ca3187dbee1f4d102ce63ab048ffee9daa6b68c96ac59d1d86ad4de2b1cfaf77f1b1f1918d143e96a588"
   wget "https://raw.githubusercontent.com/ProtonVPN/scripts/master/update-resolv-conf.sh" -O "/etc/openvpn/update-resolv-conf"
@@ -96,7 +96,7 @@ function install_openvpn_update_resolv_conf() {
     chmod +x "/etc/openvpn/update-resolv-conf"
     echo "[*] Done."
   else
-    echo "[!] Error installing openvpn-update-resolv-conf"
+    echo "[!] Error installing update-resolv-conf."
     exit 1
   fi
 }
