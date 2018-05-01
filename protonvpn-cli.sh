@@ -396,6 +396,7 @@ function openvpn_disconnect() {
         if [[ "$1" != "quiet" ]]; then
           echo "[#] Disconnected."
           echo "[#] Current IP: $(check_ip)"
+          rm -f  "$(get_protonvpn_cli_home)/.connection_config_id" "$(get_protonvpn_cli_home)/.connection_selected_protocol" 2> /dev/null
         fi
 
         if [[ "$2" != "dont_exit" ]]; then
@@ -462,6 +463,8 @@ function openvpn_connect() {
       modify_dns to_protonvpn_dns "$config_id" # Use protonvpn DNS server
       echo "[$] Connected!"
       echo "[#] New IP: $new_ip"
+      echo "$config_id" > "$(get_protonvpn_cli_home)/.connection_config_id"
+      echo "$selected_protocol" > "$(get_protonvpn_cli_home)/.connection_selected_protocol"
       exit 0
     fi
 
@@ -561,6 +564,33 @@ function uninstall_cli() {
     echo "[*] Done."
   else
     echo "[!] Error: There was an error in uninstalling protonvpn-cli."
+  fi
+}
+
+function print_console_status() {
+  current_ip="$(check_ip)"
+  if [[ $(is_openvpn_currently_running) == true ]]; then
+    echo "[OpenVPN Status]: Running"
+  else
+    echo "[OpenVPN Status]: Not Running"
+  fi
+
+  if [[ -f "$(get_protonvpn_cli_home)/.connection_config_id" ]]; then
+    echo "[ProtonVPN Status]: Running"
+  else
+    echo "[ProtonVPN Status]: Not Running"
+  fi
+
+  if [[ "$current_ip" == "Error." ]]; then
+    echo "[Internet Status]: Offline"
+    exit 0
+  else
+    echo "[Public IP Address]: $current_ip"
+    if [[ -f "$(get_protonvpn_cli_home)/.connection_selected_protocol" ]]; then
+      selected_protocol=$(cat "$(get_protonvpn_cli_home)/.connection_selected_protocol" | tr '[:lower:]' '[:upper:]')
+      echo "[OpenVPN Protocol]: $selected_protocol"
+    fi
+    exit 0
   fi
 }
 
@@ -789,6 +819,7 @@ function help_message() {
     echo "   -f, --fastest-connect               Connect to the fastest available ProtonVPN server."
     echo "   -d, --disconnect                    Disconnect the current session."
     echo "   --ip                                Print the current public IP address."
+    echo "   --status                            Print connection status."
     echo "   --update                            Update protonvpn-cli."
     echo "   --install                           Install protonvpn-cli."
     echo "   --uninstall                         Uninstall protonvpn-cli."
@@ -817,6 +848,8 @@ case $user_input in
     fi
     ;;
   "ip"|"-ip"|"--ip") check_ip
+    ;;
+    "status"|"-status"|"--status") print_console_status
     ;;
   "update"|"-update"|"--update") update_cli
     ;;
