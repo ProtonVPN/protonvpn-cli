@@ -108,7 +108,7 @@ function check_ip() {
       ip=$(wget --header 'x-pm-appversion: Other' \
                 --header 'x-pm-apiversion: 3' \
                 --header 'Accept: application/vnd.protonmail.v1+json' \
-                --timeout 3 -q -O /dev/stdout 'https://api.protonmail.ch/vpn/location' \
+                --timeout 4 -q -O /dev/stdout 'https://api.protonmail.ch/vpn/location' \
                 | python -c 'import json; _ = open("/dev/stdin", "r").read(); print(json.loads(_)["IP"])' 2> /dev/null)
       counter=$((counter+1))
     else
@@ -423,7 +423,7 @@ function openvpn_connect() {
 
   config_id=$1
   selected_protocol=$2
-  if [[ $selected_protocol == "" ]]; then
+  if [[ -z "$selected_protocol" ]]; then
     selected_protocol="udp"  # Default protocol
   fi
 
@@ -438,23 +438,25 @@ function openvpn_connect() {
     echo -e "[*] Saving logs to: $tempfile"
 
     # with cli logging
-    wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
-      --header 'Accept: application/vnd.protonmail.v1+json' \
-      --timeout 10 -q -O /dev/stdout "https://api.protonmail.ch/vpn/config?Platform=linux&LogicalID=$config_id&Protocol=$selected_protocol" \
-      | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-nocache --auth-retry nointeract --verb 4 --log-append "$tempfile" &> "$tempfile"
+    wget --header 'x-pm-appversion: Other' \
+         --header 'x-pm-apiversion: 3' \
+         --header 'Accept: application/vnd.protonmail.v1+json' \
+         --timeout 10 -q -O /dev/stdout "https://api.protonmail.ch/vpn/config?Platform=linux&LogicalID=$config_id&Protocol=$selected_protocol" \
+         | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-nocache --auth-retry nointeract --verb 4 --log-append "$tempfile" &> "$tempfile"
   else
     # without cli logging
-    wget --header 'x-pm-appversion: Other' --header 'x-pm-apiversion: 3' \
-      --header 'Accept: application/vnd.protonmail.v1+json' \
-      --timeout 10 -q -O /dev/stdout "https://api.protonmail.ch/vpn/config?Platform=linux&LogicalID=$config_id&Protocol=$selected_protocol" \
-      | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-nocache --auth-retry nointeract
+    wget --header 'x-pm-appversion: Other' \
+         --header 'x-pm-apiversion: 3' \
+         --header 'Accept: application/vnd.protonmail.v1+json' \
+         --timeout 10 -q -O /dev/stdout  "https://api.protonmail.ch/vpn/config?Platform=linux&LogicalID=$config_id&Protocol=$selected_protocol" \
+         | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-nocache --auth-retry nointeract
   fi
   echo "Connecting..."
 
   max_checks=3
   counter=0
   while [[ $counter -lt $max_checks ]]; do
-    sleep 5
+    sleep 6
     new_ip="$(check_ip)"
     if [[ ("$current_ip" != "$new_ip") && ("$new_ip" != "Error.") ]]; then
       modify_dns to_protonvpn_dns "$config_id" # Use protonvpn DNS server
@@ -541,7 +543,7 @@ function uninstall_cli() {
     openvpn_disconnect quiet dont_exit
     if [[ $(is_openvpn_currently_running) == true ]]; then  # checking if it OpenVPN is still active.
       echo "[!] Error disconnecting OpenVPN."
-      echo "[!] Please disconnect manually and try uninstallation again."
+      echo "[!] Please disconnect manually and try the uninstallation again."
       exit 1
     else
       echo "[#] Disconnected."
