@@ -587,12 +587,27 @@ function print_console_status() {
   else
     echo "[Internet Status]: Online"
     echo "[Public IP Address]: $current_ip"
-    if [[ -f "$(get_protonvpn_cli_home)/.connection_selected_protocol" ]]; then
-      selected_protocol=$(cat "$(get_protonvpn_cli_home)/.connection_selected_protocol" | tr '[:lower:]' '[:upper:]')
-      echo "[OpenVPN Protocol]: $selected_protocol"
-    fi
-    exit 0
   fi
+  if [[ -f "$(get_protonvpn_cli_home)/.connection_config_id" ]]; then
+    config_id=$(cat "$(get_protonvpn_cli_home)/.connection_config_id")
+    vpn_server_details=$(get_vpn_server_details "$config_id")
+    server_name=$(echo "$vpn_server_details" | cut -d '@' -f1)
+    server_exit_country=$(echo "$vpn_server_details" | cut -d '@' -f2)
+    server_tier=$(echo "$vpn_server_details" | cut -d '@' -f3)
+    server_features=$(echo "$vpn_server_details" | cut -d '@' -f4)
+    server_load=$(echo "$vpn_server_details" | cut -d '@' -f5)
+    selected_protocol=$(cat "$(get_protonvpn_cli_home)/.connection_selected_protocol" | tr '[:lower:]' '[:upper:]')
+
+    echo "[ProtonVPN] [Server Name]: $server_name"
+    echo "[ProtonVPN] [OpenVPN Protocol]: $selected_protocol"
+    echo "[ProtonVPN] [Exit Country]: $server_exit_country"
+    echo "[ProtonVPN] [Tier]: $server_tier"
+    echo "[ProtonVPN] [Server Features]: $server_features"
+    echo "[ProtonVPN] [Server Load]: $server_load"
+
+  fi
+    exit 0
+
 }
 
 function connect_to_fastest_vpn() {
@@ -697,6 +712,36 @@ function connection_to_vpn_via_dialog_menu() {
   fi
 
   openvpn_connect "$config_id" "$selected_protocol"
+
+}
+
+function get_vpn_server_details() {
+  response_cache_path="$(get_protonvpn_cli_home)/.response_cache"
+  config_id="$1"
+  output=`python <<END
+import json
+response_cache = open("""$response_cache_path""", "r").read()
+json_parsed_response = json.loads(response_cache)
+
+output = ""
+all_features = {"SECURE_CORE": 1, "TOR": 2, "P2P": 4, "XOR": 8, "IPV6": 16}
+server_features = []
+for _ in json_parsed_response["LogicalServers"]:
+    if ("""$config_id""" == _["ID"]):
+        server_features_index = int(_["Features"])
+        for f in all_features.keys():
+            if (server_features_index & all_features[f]) > 0:
+                server_features.append(f)
+        if len(server_features) == 0:
+            server_features_value = "None"
+        else:
+            server_features_value = ", ".join(server_features)
+        output = "%s@%s@%s@%s@%s"%(_["Name"], _["ExitCountry"], _["Tier"], server_features_value, _["Load"])
+        break
+print(output)
+END`
+
+  echo "$output"
 
 }
 function get_fastest_vpn_connection_id() {
