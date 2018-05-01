@@ -35,7 +35,7 @@ function check_requirements() {
     exit 1
   fi
 
-  if [[ -z $(which sysctl) && ( $(detect_machine_type) != "Mac" )  ]]; then
+  if [[ -z $(which sysctl) && ( $(detect_machine_type) != "Mac" ) ]]; then
     echo "[!] Error: sysctl is not installed. Install \`sysctl\` package to continue."
     exit 1
   fi
@@ -114,7 +114,9 @@ function check_ip() {
     else
       ip="Error."
     fi
-    sleep 2
+    if [[ -z "$ip" ]]; then
+      sleep 2  # sleep for 2 seconds before retrying
+    fi
   done
   echo "$ip"
 }
@@ -333,11 +335,42 @@ function modify_dns() {
   fi
 }
 
+function is_internet_working_normally() {
+  if [[ "$(check_ip)" != "Error." ]]; then
+    echo true
+  else
+    echo false
+  fi
+}
+
+function check_if_internet_is_working_normally() {
+  if [[ "$(is_internet_working_normally)" == false ]]; then
+    echo "[!] Error: There is an internet connection issue."
+    exit 1
+  fi
+}
+
 function is_openvpn_currently_running() {
   if [[ $(pgrep openvpn) == "" ]]; then
     echo false
   else
     echo true
+  fi
+}
+
+function check_if_openvpn_is_currently_running() {
+  if [[ $(is_openvpn_currently_running) == true ]]; then
+    echo "[!] Error: OpenVPN is already running on this machine."
+    exit 1
+  fi
+}
+
+function check_if_profile_initialized() {
+  _=$(cat "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" "$(get_protonvpn_cli_home)/protonvpn_tier" &> /dev/null)
+  if [[ $? != 0 ]]; then
+    echo "[!] Profile is not initialized."
+    echo -e "Initialize your profile using: \n    $(basename $0) --init"
+    exit 1
   fi
 }
 
@@ -383,10 +416,7 @@ function openvpn_disconnect() {
 }
 
 function openvpn_connect() {
-  if [[ $(is_openvpn_currently_running) == true ]]; then
-    echo "[!] Error: OpenVPN is already running on this machine."
-    exit 1
-  fi
+  check_if_openvpn_is_currently_running
 
   modify_dns backup # Backing-up current DNS entries
   manage_ipv6 disable # Disabling IPv6 on machine.
@@ -441,10 +471,8 @@ function openvpn_connect() {
 }
 
 function update_cli() {
-  if [[ "$(check_ip)" == "Error." ]]; then
-    echo "[!] Error: There is an internet connection issue."
-    exit 1
-  fi
+  check_if_internet_is_working_normallly
+
   cli_path="/usr/local/bin/protonvpn-cli"
   if [[ ! -f "$cli_path" ]]; then
     echo "[!] Error: protonvpn-cli does not seem to be installed."
@@ -534,25 +562,10 @@ function uninstall_cli() {
   fi
 }
 
-function check_if_profile_initialized() {
-  _=$(cat "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" "$(get_protonvpn_cli_home)/protonvpn_tier" &> /dev/null)
-  if [[ $? != 0 ]]; then
-    echo "[!] Profile is not initialized."
-    echo -e "Initialize your profile using: \n    $(basename $0) --init"
-    exit 1
-  fi
-}
-
 function connect_to_fastest_vpn() {
   check_if_profile_initialized
-  if [[ $(is_openvpn_currently_running) == true ]]; then
-    echo "[!] Error: OpenVPN is already running on this machine."
-    exit 1
-  fi
-  if [[ "$(check_ip)" == "Error." ]]; then
-    echo "[!] Error: There is an internet connection issue."
-    exit 1
-  fi
+  check_if_openvpn_is_currently_running
+  check_if_internet_is_working_normally
 
   echo "Fetching ProtonVPN Servers..."
   config_id=$(get_fastest_vpn_connection_id)
@@ -562,14 +575,8 @@ function connect_to_fastest_vpn() {
 
 function connect_to_random_vpn() {
   check_if_profile_initialized
-  if [[ $(is_openvpn_currently_running) == true ]]; then
-    echo "[!] Error: OpenVPN is already running on this machine."
-    exit 1
-  fi
-  if [[ "$(check_ip)" == "Error." ]]; then
-    echo "[!] Error: There is an internet connection issue."
-    exit 1
-  fi
+  check_if_openvpn_is_currently_running
+  check_if_internet_is_working_normally
 
   echo "Fetching ProtonVPN Servers..."
   config_id=$(get_random_vpn_connection_id)
@@ -580,14 +587,8 @@ function connect_to_random_vpn() {
 
 function connect_to_specific_server() {
   check_if_profile_initialized
-  if [[ $(is_openvpn_currently_running) == true ]]; then
-    echo "[!] Error: OpenVPN is already running on this machine."
-    exit 1
-  fi
-  if [[ "$(check_ip)" == "Error." ]]; then
-    echo "[!] Error: There is an internet connection issue."
-    exit 1
-  fi
+  check_if_openvpn_is_currently_running
+  check_if_internet_is_working_normally
 
   echo "Fetching ProtonVPN Servers..."
 
@@ -613,14 +614,8 @@ function connect_to_specific_server() {
 
 function connection_to_vpn_via_dialog_menu() {
   check_if_profile_initialized
-  if [[ $(is_openvpn_currently_running) == true ]]; then
-    echo "[!] Error: OpenVPN is already running on this machine."
-    exit 1
-  fi
-  if [[ "$(check_ip)" == "Error." ]]; then
-    echo "[!] Error: There is an internet connection issue."
-    exit 1
-  fi
+  check_if_openvpn_is_currently_running
+  check_if_internet_is_working_normally
 
   available_protocols=("udp" " " "tcp" " ")
   IFS=$'\n'
