@@ -585,6 +585,7 @@ function print_console_status() {
     echo "[Internet Status]: Offline"
     exit 0
   else
+    echo "[Internet Status]: Online"
     echo "[Public IP Address]: $current_ip"
     if [[ -f "$(get_protonvpn_cli_home)/.connection_selected_protocol" ]]; then
       selected_protocol=$(cat "$(get_protonvpn_cli_home)/.connection_selected_protocol" | tr '[:lower:]' '[:upper:]')
