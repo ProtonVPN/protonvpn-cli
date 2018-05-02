@@ -35,7 +35,7 @@ function check_requirements() {
     exit 1
   fi
 
-  if [[ -z $(which sysctl) && ( $(detect_machine_type) != "Mac" ) ]]; then
+  if [[ -z $(which sysctl) && ( $(detect_platform_type) != "Mac" ) ]]; then
     echo "[!] Error: sysctl is not installed. Install \`sysctl\` package to continue."
     exit 1
   fi
@@ -46,7 +46,7 @@ function check_requirements() {
     exit 1
   fi
 
-  if [[ (! -x "/etc/openvpn/update-resolv-conf") && ( $(detect_machine_type) != "Mac") ]]; then
+  if [[ (! -x "/etc/openvpn/update-resolv-conf") && ( $(detect_platform_type) != "MacOS") ]]; then
     echo "[!] Error: update-resolv-conf is not installed."
     read -p "Would you like protonvpn-cli to install update-resolv-conf? (y/n): " "user_confirm"
     if [[ "$user_confirm" == "y" ]]; then
@@ -189,22 +189,22 @@ function init_cli() {
   echo "[*] Done."
 }
 
-function detect_machine_type() {
+function detect_platform_type() {
   unameOut="$(uname -s)"
   case "${unameOut}" in
-    Linux*)     machine=Linux;;
-    Darwin*)    machine=Mac;;
-    CYGWIN*)    machine=Cygwin;;
-    MINGW*)     machine=MinGw;;
-    *)          machine="UNKNOWN"
+    Linux*)     platform=Linux;;
+    Darwin*)    platform=MacOS;;
+    CYGWIN*)    platform=Linux;;
+    MINGW*)     platform=Linux;;
+    *)          platform=Linux
   esac
-  echo "$machine"
+  echo "$platform"
 }
 
 function manage_ipv6() {
   # ProtonVPN support for IPv6 coming soon.
   errors_counter=0
-  if [[ ("$1" == "disable") && ( $(detect_machine_type) != "Mac" ) ]]; then
+  if [[ ("$1" == "disable") && ( $(detect_platform_type) != "MacOS" ) ]]; then
     if [ ! -z "$(ip -6 a 2> /dev/null)" ]; then
 
       # Save linklocal address and disable IPv6.
@@ -221,7 +221,7 @@ function manage_ipv6() {
   fi
 
   # Disable IPv6 in macOS.
-  if [[ ("$1" == "disable") &&  ( $(detect_machine_type) == "Mac" ) ]]; then
+  if [[ ("$1" == "disable") &&  ( $(detect_platform_type) == "MacOS" ) ]]; then
     # Get list of services and remove the first line which contains a heading.
     ipv6_services="$( networksetup  -listallnetworkservices | sed -e '1,1d')"
 
@@ -241,11 +241,11 @@ function manage_ipv6() {
 
   fi
 
-  if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_address" ) && ( $(detect_machine_type) != "Mac" ) ]]; then
+  if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_address" ) && ( $(detect_platform_type) != "MacOS" ) ]]; then
     echo "[!] This is an error in enabling ipv6 on the machine. Please enable it manually."
   fi
 
-  if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_address" ) && ( $(detect_machine_type) != "Mac" ) ]]; then
+  if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_address" ) && ( $(detect_platform_type) != "MacOS" ) ]]; then
     sysctl -w net.ipv6.conf.all.disable_ipv6=0 &> /dev/null
     if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
@@ -261,12 +261,12 @@ function manage_ipv6() {
     rm -f "$(get_protonvpn_cli_home)/.ipv6_address"
   fi
 
-  if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_services" ) && ( $(detect_machine_type) == "Mac" ) ]]; then
+  if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_services" ) && ( $(detect_platform_type) == "MacOS" ) ]]; then
     echo "[!] This is an error in enabling IPv6 on the machine. Please enable it manually."
   fi
 
   # Restore IPv6 in macOS.
-  if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_services" ) && ( $(detect_machine_type) == "Mac" ) ]]; then
+  if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_services" ) && ( $(detect_platform_type) == "MacOS" ) ]]; then
     if [[ $(cat "$(get_protonvpn_cli_home)/.ipv6_services") == "" ]] ; then
       return
     fi
@@ -289,7 +289,7 @@ function manage_ipv6() {
 function modify_dns() {
   # Backup DNS entries
   if [[ ("$1" == "backup")]]; then
-    if [[  ( $(detect_machine_type) == "Mac" ) ]]; then
+    if [[  ( $(detect_platform_type) == "MacOS" ) ]]; then
       networksetup listallnetworkservices | tail +2 | while read interface; do
         networksetup -getdnsservers "$interface" > "$(get_protonvpn_cli_home)/$interface.dns_backup"
       done
@@ -307,7 +307,7 @@ function modify_dns() {
       dns_server="10.8.8.1" # paid tier dns
     fi
 
-    if [[ ( $(detect_machine_type) == "Mac" ) ]]; then
+    if [[ ( $(detect_platform_type) == "MacOS" ) ]]; then
       networksetup listallnetworkservices | tail +2 | while read interface; do
         networksetup -setdnsservers "$interface" $dns_server
       done
@@ -318,7 +318,7 @@ function modify_dns() {
 
   # Restore backed-up DNS entries
   if [[ "$1" == "revert_to_backup" ]]; then
-    if [[  ( $(detect_machine_type) == "Mac" )  ]]; then
+    if [[  ( $(detect_platform_type) == "MacOS" )  ]]; then
       networksetup listallnetworkservices | tail +2 | while read interface; do
         file="$(get_protonvpn_cli_home)/$interface.dns_backup"
         if [[ -f "$file" ]]; then
@@ -442,14 +442,14 @@ function openvpn_connect() {
     wget --header 'x-pm-appversion: Other' \
          --header 'x-pm-apiversion: 3' \
          --header 'Accept: application/vnd.protonmail.v1+json' \
-         --timeout 10 --tries 1 -q -O /dev/stdout "https://api.protonmail.ch/vpn/config?Platform=linux&LogicalID=$config_id&Protocol=$selected_protocol" \
+         --timeout 10 --tries 1 -q -O /dev/stdout "https://api.protonmail.ch/vpn/config?Platform=$(detect_platform_type)&LogicalID=$config_id&Protocol=$selected_protocol" \
          | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-nocache --auth-retry nointeract --verb 4 --log-append "$tempfile" &> "$tempfile"
   else
     # without cli logging
     wget --header 'x-pm-appversion: Other' \
          --header 'x-pm-apiversion: 3' \
          --header 'Accept: application/vnd.protonmail.v1+json' \
-         --timeout 10 --tries 1 -q -O /dev/stdout  "https://api.protonmail.ch/vpn/config?Platform=linux&LogicalID=$config_id&Protocol=$selected_protocol" \
+         --timeout 10 --tries 1 -q -O /dev/stdout  "https://api.protonmail.ch/vpn/config?Platform=$(detect_platform_type)&LogicalID=$config_id&Protocol=$selected_protocol" \
          | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-nocache --auth-retry nointeract
   fi
   echo "Connecting..."
