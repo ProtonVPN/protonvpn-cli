@@ -476,7 +476,7 @@ function openvpn_connect() {
 }
 
 function update_cli() {
-  check_if_internet_is_working_normallly
+  check_if_internet_is_working_normally
 
   cli_path="/usr/local/bin/protonvpn-cli"
   if [[ ! -f "$cli_path" ]]; then
