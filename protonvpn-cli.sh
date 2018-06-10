@@ -22,10 +22,20 @@ function check_requirements() {
     echo "[!] Error: openvpn is not installed. Install \`openvpn\` package to continue."
     exit 1
   fi
-  if [[ -z $(which python) ]]; then
+
+  if [[ ! -z $(which python) ]]; then
+    python=$(which python)
+  elif [[ ! -z $(which python3) ]]; then
+    python=$(which python3)
+  elif [[ ! -z $(which python2) ]]; then
+    python=$(which python2)
+  fi
+
+  if [[ -z "$python" ]]; then
     echo "[!] Error: python is not installed. Install \`python\` package to continue."
     exit 1
   fi
+
   if [[ -z $(which dialog) ]]; then
     echo "[!] Error: dialog is not installed. Install \`dialog\` package to continue."
     exit 1
@@ -109,7 +119,7 @@ function check_ip() {
                 --header 'x-pm-apiversion: 3' \
                 --header 'Accept: application/vnd.protonmail.v1+json' \
                 --timeout 4 --tries 1 -q -O /dev/stdout 'https://api.protonmail.ch/vpn/location' \
-                | python -c 'import json; _ = open("/dev/stdin", "r").read(); print(json.loads(_)["IP"])' 2> /dev/null)
+                | $python -c 'import json; _ = open("/dev/stdin", "r").read(); print(json.loads(_)["IP"])' 2> /dev/null)
       counter=$((counter+1))
     else
       ip="Error."
@@ -718,7 +728,7 @@ function connection_to_vpn_via_dialog_menu() {
 function get_vpn_server_details() {
   response_cache_path="$(get_protonvpn_cli_home)/.response_cache"
   config_id="$1"
-  output=`python <<END
+  output=`$python <<END
 import json
 response_cache = open("""$response_cache_path""", "r").read()
 json_parsed_response = json.loads(response_cache)
@@ -750,7 +760,7 @@ function get_fastest_vpn_connection_id() {
                          --header 'Accept: application/vnd.protonmail.v1+json' \
                          --timeout 20 --tries 1 -q -O /dev/stdout "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
   tier=$(cat "$(get_protonvpn_cli_home)/protonvpn_tier")
-  output=`python <<END
+  output=`$python <<END
 import json, math, random
 json_parsed_response = json.loads("""$response_output""")
 
@@ -790,7 +800,7 @@ function get_random_vpn_connection_id() {
                          --header 'Accept: application/vnd.protonmail.v1+json' \
                          --timeout 20 --tries 1 -q -O /dev/stdout "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
   tier=$(cat "$(get_protonvpn_cli_home)/protonvpn_tier")
-  output=`python <<END
+  output=`$python <<END
 import json, random
 json_parsed_response = json.loads("""$response_output""")
 output = []
@@ -805,7 +815,7 @@ END`
 
 function get_vpn_tier() {
   response_cache_path="$(get_protonvpn_cli_home)/.response_cache"
-  output=`python <<END
+  output=`$python <<END
 import json
 response_cache_fileread = open("""$response_cache_path""", "r").read()
 json_parsed_response = json.loads(response_cache_fileread)
@@ -824,7 +834,7 @@ function get_vpn_config_details() {
                          --header 'Accept: application/vnd.protonmail.v1+json' \
                          --timeout 20 --tries 1 -q -O /dev/stdout "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
   tier=$(cat "$(get_protonvpn_cli_home)/protonvpn_tier")
-  output=`python <<END
+  output=`$python <<END
 import json, random
 json_parsed_response = json.loads("""$response_output""")
 output = []
