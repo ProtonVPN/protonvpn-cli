@@ -453,14 +453,14 @@ function openvpn_connect() {
          --header 'x-pm-apiversion: 3' \
          --header 'Accept: application/vnd.protonmail.v1+json' \
          --timeout 10 --tries 1 -q -O /dev/stdout "https://api.protonmail.ch/vpn/config?Platform=$(detect_platform_type)&LogicalID=$config_id&Protocol=$selected_protocol" \
-         | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-nocache --auth-retry nointeract --verb 4 --log-append "$tempfile" &> "$tempfile"
+         | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-retry nointeract --verb 4 --log-append "$tempfile" &> "$tempfile"
   else
     # without cli logging
     wget --header 'x-pm-appversion: Other' \
          --header 'x-pm-apiversion: 3' \
          --header 'Accept: application/vnd.protonmail.v1+json' \
          --timeout 10 --tries 1 -q -O /dev/stdout  "https://api.protonmail.ch/vpn/config?Platform=$(detect_platform_type)&LogicalID=$config_id&Protocol=$selected_protocol" \
-         | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-nocache --auth-retry nointeract
+         | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-retry nointeract
   fi
   echo "Connecting..."
 
