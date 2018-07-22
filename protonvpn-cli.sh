@@ -567,8 +567,10 @@ function install_cli() {
 
   if [[ ($errors_counter == 0) || ( ! -z $(which protonvpn-cli) ) ]]; then
     echo "[*] Done."
+    exit 0
   else
     echo "[!] Error: There was an error in installing protonvpn-cli."
+    exit 1
   fi
 }
 
@@ -596,8 +598,10 @@ function uninstall_cli() {
 
   if [[ ($errors_counter == 0) || ( $(which protonvpn-cli) == "" ) ]]; then
     echo "[*] Done."
+    exit 0
   else
     echo "[!] Error: There was an error in uninstalling protonvpn-cli."
+    exit 1
   fi
 }
 
@@ -783,7 +787,7 @@ function connection_to_vpn_via_dialog_menu() {
     --menu "ID - Name - Country - Load - EntryIP - ExitIP - Features" 35 300 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
   clear
   if [[ -z "$config_id" ]]; then
-    exit 2
+    exit 1
   fi
 
   c=1
@@ -801,7 +805,7 @@ function connection_to_vpn_via_dialog_menu() {
     --menu "Select Network Protocol" 35 80 2 "${available_protocols[@]}")
   clear
   if [[ -z "$selected_protocol" ]]; then
-    exit 2
+    exit 1
   fi
 
   openvpn_connect "$config_id" "$selected_protocol"
