@@ -420,12 +420,13 @@ function openvpn_disconnect() {
       sleep 0.50
       if [[ $(is_openvpn_currently_running) == false ]]; then
         modify_dns revert_to_backup # Reverting to original DNS entries
-        rm -f "$(get_protonvpn_cli_home)/.response_cache" 2> /dev/null  # Removing cache
+        cp "$(get_protonvpn_cli_home)/.connection_config_id" "$(get_protonvpn_cli_home)/.previous_connection_config_id" 2> /dev/null
+        cp "$(get_protonvpn_cli_home)/.connection_selected_protocol" "$(get_protonvpn_cli_home)/.previous_connection_selected_protocol" 2> /dev/null
+        rm -f  "$(get_protonvpn_cli_home)/.connection_config_id" "$(get_protonvpn_cli_home)/.connection_selected_protocol" 2> /dev/null
 
         if [[ "$1" != "quiet" ]]; then
           echo "[#] Disconnected."
           echo "[#] Current IP: $(check_ip)"
-          rm -f  "$(get_protonvpn_cli_home)/.connection_config_id" "$(get_protonvpn_cli_home)/.connection_selected_protocol" 2> /dev/null
         fi
 
         if [[ "$2" != "dont_exit" ]]; then
@@ -677,6 +678,23 @@ function connect_to_random_vpn() {
   openvpn_connect "$config_id" "$selected_protocol"
 }
 
+function connect_to_previous_vpn() {
+  check_if_profile_initialized
+  check_if_openvpn_is_currently_running
+  check_if_internet_is_working_normally
+
+  if ! [[ -f "$(get_protonvpn_cli_home)/.previous_connection_config_id" && \
+          -f "$(get_protonvpn_cli_home)/.previous_connection_selected_protocol" ]]; then
+    echo "[!] No previous VPN server were found."
+    exit 1
+  fi
+
+  config_id=$(cat "$(get_protonvpn_cli_home)/.previous_connection_config_id")
+  selected_protocol=$(cat "$(get_protonvpn_cli_home)/.previous_connection_selected_protocol")
+  openvpn_connect "$config_id" "$selected_protocol"
+}
+
+
 function connect_to_specific_server() {
   check_if_profile_initialized
   check_if_openvpn_is_currently_running
@@ -720,7 +738,12 @@ function connect_to_specific_server() {
   fi
 
   # If not found in $server_list.
-  echo "[!] Error: Invalid server name, or server not accessible with your plan."
+  if [[ "$3" == "server" ]]; then
+    echo "[!] Error: Invalid server name, or server not accessible with your plan."
+  fi
+  if [[ "$3" == "country" ]]; then
+    echo "[!] Error: Invalid country name, or country not accessible with your plan."
+  fi
   exit 1
 }
 
@@ -1001,6 +1024,7 @@ function help_message() {
     echo "   -c, --connect                       Select and connect to a ProtonVPN server."
     echo "   -c [server-name] [protocol]         Connect to a ProtonVPN server by name."
     echo "   -r, --random-connect                Connect to a random ProtonVPN server."
+    echo "   -l, --last-connect                  Connect to the previously used ProtonVPN server."
     echo "   -f, --fastest-connect               Connect to the fastest available ProtonVPN server."
     echo "   -p2p, --p2p-connect                 Connect to the fastest available P2P ProtonVPN server."
     echo "   -cc, --country-connect              Select and connect to a ProtonVPN server by country."
@@ -1025,6 +1049,8 @@ case $user_input in
   "-d"|"--d"|"-disconnect"|"--disconnect") openvpn_disconnect
     ;;
   "-r"|"--r"|"-random"|"--random"|"-random-connect"|"--random-connect") connect_to_random_vpn
+    ;;
+  "-l"|"--l"|"-last-connect"|"--last-connect") connect_to_previous_vpn
     ;;
   "-f"|"--f"|"-fastest"|"--fastest"|"-fastest-connect"|"--fastest-connect") connect_to_fastest_vpn
     ;;
