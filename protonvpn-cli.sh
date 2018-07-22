@@ -684,20 +684,40 @@ function connect_to_specific_server() {
 
   echo "Fetching ProtonVPN Servers..."
 
-  server_list=$(get_vpn_config_details | tr ' ' '@')
+  if [[ "$3" == "server" ]]; then
+    server_list=$(get_vpn_config_details | tr ' ' '@')
+  fi
+
+  if [[ "$3" == "country" ]]; then
+    server_list=$(get_country_vpn_servers_details | tr ' ' '@')
+  fi
+
   if [[ "$(echo "$2" | tr '[:upper:]' '[:lower:]')" == "tcp" ]]; then
     protocol="tcp"
   else
     protocol="udp"
   fi
 
-  for i in $server_list; do
-    id=$(echo "$i" | cut -d"@" -f1)
-    name=$(echo "$i" | cut -d"@" -f2)
-    if [[ "$(echo "$1" | tr '[:upper:]' '[:lower:]')" == "$(echo "$name" | tr '[:upper:]' '[:lower:]')"  ]]; then
-      openvpn_connect "$id" "$protocol"
-    fi
-  done
+  if [[ "$3" == "server" ]]; then
+    for i in $server_list; do
+      id=$(echo "$i" | cut -d"@" -f1)
+      name=$(echo "$i" | cut -d"@" -f2)
+      if [[ "$(echo "$1" | tr '[:upper:]' '[:lower:]')" == "$(echo "$name" | tr '[:upper:]' '[:lower:]')"  ]]; then
+        openvpn_connect "$id" "$protocol"
+      fi
+    done
+  fi
+
+  if [[ "$3" == "country" ]]; then
+    for i in $server_list; do
+      id=$(echo "$i" | cut -d"@" -f1)
+      name=$(echo "$i" | cut -d"@" -f2)
+      country=$(echo "$i" | cut -d"@" -f3)
+      if [[ "$(echo "$1" | tr '[:upper:]' '[:lower:]')" == "$(echo "$country" | tr '[:upper:]' '[:lower:]')"  ]]; then
+        openvpn_connect "$id" "$protocol"
+      fi
+    done
+  fi
 
   # If not found in $server_list.
   echo "[!] Error: Invalid server name, or server not accessible with your plan."
@@ -715,7 +735,13 @@ function connection_to_vpn_via_dialog_menu() {
 
   echo "Fetching ProtonVPN Servers..."
 
-  c2=$(get_vpn_config_details)
+  if [[ "$1" == "servers" ]]; then
+    c2=$(get_vpn_config_details)
+  fi
+  if [[ "$1" == "countries" ]]; then
+    c2=$(get_country_vpn_servers_details)
+  fi
+
   counter=0
   for i in $c2; do
     ID=$(echo "$i" | cut -d " " -f1)
@@ -788,6 +814,70 @@ END`
   echo "$output"
 
 }
+
+function get_country_vpn_servers_details() {
+  response_output=$(wget --header 'x-pm-appversion: Other' \
+                         --header 'x-pm-apiversion: 3' \
+                         --header 'Accept: application/vnd.protonmail.v1+json' \
+                         --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
+  tier=$(cat "$(get_protonvpn_cli_home)/protonvpn_tier")
+  user_chosen_specific_country="$1"
+  output=`python <<END
+import json
+json_parsed_response = json.loads("""$response_output""")
+output = []
+all_features = {"SECURE_CORE": 1, "TOR": 2, "P2P": 4, "XOR": 8, "IPV6": 16}
+excluded_features_on_fastest_connect = ["TOR"]
+
+for _ in json_parsed_response["LogicalServers"]:
+    if (_["Tier"] <= int("""$tier""")):
+        output.append(_)
+
+candidates_1 = {}
+for _ in output:
+  server_features_index = int(_["Features"])
+  server_features  = []
+  server_features_output = ""
+  for f in all_features.keys():
+      if (server_features_index & all_features[f]) > 0:
+          server_features.append(f)
+
+  if len(server_features) == 0:
+      server_features_output = "None"
+  else:
+      server_features_output = ",".join(server_features)
+
+  is_excluded = False
+  for excluded_feature in excluded_features_on_fastest_connect:
+      if excluded_feature in server_features:
+          is_excluded = True
+  if is_excluded is True:
+      continue
+
+  if _["ExitCountry"] not in candidates_1.keys():
+      candidates_1.update({_["ExitCountry"]: [_]})
+  else:
+      candidates_1[_["ExitCountry"]].append(_)
+
+candidates_2 = {}
+for country in candidates_1.keys():
+    candidates_2.update({country: candidates_1[country][0]})
+
+    for server in candidates_1[country]:
+        if server["Score"] < candidates_2[country]["Score"]:
+            candidates_2.update({country: server})
+
+for _ in candidates_2.keys():
+  o = "{} {}@{}@{}@{}@{}@{}".format(candidates_2[_]["ID"], candidates_2[_]["Name"], \
+  candidates_2[_]["ExitCountry"], candidates_2[_]["Load"], candidates_2[_]["Servers"][0]["EntryIP"], candidates_2[_]["Servers"][0]["ExitIP"], \
+  str(server_features_output))
+
+  print(o)
+END`
+
+  echo "$output"
+}
+
 function get_fastest_vpn_connection_id() {
   required_feature=${1:-}
   response_output=$(wget --header 'x-pm-appversion: Other' \
@@ -912,7 +1002,9 @@ function help_message() {
     echo "   -c [server-name] [protocol]         Connect to a ProtonVPN server by name."
     echo "   -r, --random-connect                Connect to a random ProtonVPN server."
     echo "   -f, --fastest-connect               Connect to the fastest available ProtonVPN server."
-    echo "   -p2p, --p2p-connect                   Connect to the fastest available P2P ProtonVPN server."
+    echo "   -p2p, --p2p-connect                 Connect to the fastest available P2P ProtonVPN server."
+    echo "   -cc, --country-connect              Select and connect to a ProtonVPN server by country."
+    echo "   -cc [server-name] [protocol]        Connect to the fastest available server in a specific country."
     echo "   -d, --disconnect                    Disconnect the current session."
     echo "   --ip                                Print the current public IP address."
     echo "   --status                            Print connection status."
@@ -938,11 +1030,18 @@ case $user_input in
     ;;
   "-p2p"|"--p2p"|"-p2p-connect"|"--p2p-connect") connect_to_fastest_p2p_vpn
     ;;
+    "-cc"|"--cc"|"-country-connect"|"--country-connect")
+    if [[ $# == 1 ]]; then
+      connection_to_vpn_via_dialog_menu "countries"
+    elif [[ $# > 1 ]]; then
+      connect_to_specific_server "$2" "$3" "country"
+    fi
+    ;;
   "-c"|"-connect"|"--c"|"--connect")
     if [[ $# == 1 ]]; then
-      connection_to_vpn_via_dialog_menu
+      connection_to_vpn_via_dialog_menu "servers"
     elif [[ $# > 1 ]]; then
-      connect_to_specific_server "$2" "$3"
+      connect_to_specific_server "$2" "$3" "server"
     fi
     ;;
   "ip"|"-ip"|"--ip") check_ip
