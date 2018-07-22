@@ -58,8 +58,8 @@ function check_requirements() {
 
   if [[ (! -x "/etc/openvpn/update-resolv-conf") && ( $(detect_platform_type) != "MacOS") ]]; then
     echo "[!] Error: update-resolv-conf is not installed."
-    read -p "Would you like protonvpn-cli to install update-resolv-conf? (y/n): " "user_confirm"
-    if [[ "$user_confirm" == "y" ]]; then
+    read -p "Would you like protonvpn-cli to install update-resolv-conf? (Y/N) (Default: N): " "user_confirm"
+    if [[ "$user_confirm" == "Y" ]]; then
       install_update_resolv_conf
     else
       exit 1
@@ -155,7 +155,7 @@ bindkey menubox \\h FIELD_NEXT
 
 function init_cli() {
   if [[ -f "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" ]]; then
-    echo -n "[!] user profile for protonvpn-cli has already been initialized. Would you like to start over with a fresh configuration? [Y/N]: "
+    echo -n "[!] user profile for protonvpn-cli has already been initialized. Would you like to start over with a fresh configuration? [Y/N] (Default: Y): "
     read "reset_profile"
   fi
   if  [[ ("$reset_profile" == "n" || "$reset_profile" == "N") ]]; then
@@ -193,7 +193,7 @@ function init_cli() {
   chown "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/protonvpn_tier"
   chmod 0400 "$(get_protonvpn_cli_home)/protonvpn_tier"
 
-  read -p "Would you like to use a custom DNS server? (Warning: This would make your VPN connection vulnerable to DNS leaks. Only use it when you know what you're doing) [Y/N]: " "use_custom_dns"
+  read -p "Would you like to use a custom DNS server? (Warning: This would make your VPN connection vulnerable to DNS leaks. Only use it when you know what you're doing) [Y/N] (Default: N): " "use_custom_dns"
 
   if  [[ ("$use_custom_dns" == "y" || "$use_custom_dns" == "Y") ]]; then
      read -p "Custom DNS Server: " "custom_dns"
@@ -1004,7 +1004,7 @@ function help_message() {
     echo "   -f, --fastest-connect               Connect to the fastest available ProtonVPN server."
     echo "   -p2p, --p2p-connect                 Connect to the fastest available P2P ProtonVPN server."
     echo "   -cc, --country-connect              Select and connect to a ProtonVPN server by country."
-    echo "   -cc [server-name] [protocol]        Connect to the fastest available server in a specific country."
+    echo "   -cc [country-name] [protocol]       Connect to the fastest available server in a specific country."
     echo "   -d, --disconnect                    Disconnect the current session."
     echo "   --ip                                Print the current public IP address."
     echo "   --status                            Print connection status."
