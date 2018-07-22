@@ -912,7 +912,7 @@ function help_message() {
     echo "   -c [server-name] [protocol]         Connect to a ProtonVPN server by name."
     echo "   -r, --random-connect                Connect to a random ProtonVPN server."
     echo "   -f, --fastest-connect               Connect to the fastest available ProtonVPN server."
-    echo "   -p, --p2p-connect                   Connect to the fastest available P2P ProtonVPN server."
+    echo "   -p2p, --p2p-connect                   Connect to the fastest available P2P ProtonVPN server."
     echo "   -d, --disconnect                    Disconnect the current session."
     echo "   --ip                                Print the current public IP address."
     echo "   --status                            Print connection status."
@@ -936,7 +936,7 @@ case $user_input in
     ;;
   "-f"|"--f"|"-fastest"|"--fastest"|"-fastest-connect"|"--fastest-connect") connect_to_fastest_vpn
     ;;
-  "-p"|"--p"|"-p2p"|"--p2p"|"-p2p-connect"|"--p2p-connect") connect_to_fastest_p2p_vpn
+  "-p2p"|"--p2p"|"-p2p"|"--p2p"|"-p2p-connect"|"--p2p-connect") connect_to_fastest_p2p_vpn
     ;;
   "-c"|"-connect"|"--c"|"--connect")
     if [[ $# == 1 ]]; then
