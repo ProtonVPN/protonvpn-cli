@@ -47,7 +47,7 @@ $ wget "https://github.com/ProtonVPN/protonvpn-cli/raw/master/protonvpn-cli.sh" 
 | `protonvpn-cli -c, --connect`                 | Select and connect to a ProtonVPN server.                      |
 | `protonvpn-cli -c [server-name] [protocol]`   | Connect to a ProtonVPN server by name.                         |
 | `protonvpn-cli -r, --random-connect`          | Connect to a random ProtonVPN server.                          |
-| `protonvpn-cli -l, --last-connect               Connect to the previously used ProtonVPN server.               |
+| `protonvpn-cli -l, --last-connect`            | Connect to the previously used ProtonVPN server.               |
 | `protonvpn-cli -f, --fastest-connect`         | Connect to the fastest available ProtonVPN server.             |
 | `protonvpn-cli -p2p, --p2p-connect`           | Connect to the fastest available P2P ProtonVPN server.         |
 | `protonvpn-cli -cc, --country-connect`        | Select and connect to a ProtonVPN server by country.           |
