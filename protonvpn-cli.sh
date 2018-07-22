@@ -936,7 +936,7 @@ case $user_input in
     ;;
   "-f"|"--f"|"-fastest"|"--fastest"|"-fastest-connect"|"--fastest-connect") connect_to_fastest_vpn
     ;;
-  "-p2p"|"--p2p"|"-p2p"|"--p2p"|"-p2p-connect"|"--p2p-connect") connect_to_fastest_p2p_vpn
+  "-p2p"|"--p2p"|"-p2p-connect"|"--p2p-connect") connect_to_fastest_p2p_vpn
     ;;
   "-c"|"-connect"|"--c"|"--connect")
     if [[ $# == 1 ]]; then
