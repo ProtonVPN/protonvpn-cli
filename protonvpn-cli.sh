@@ -406,7 +406,6 @@ function check_if_profile_initialized() {
 function openvpn_disconnect() {
   max_checks=3
   counter=0
-  disconnected=false
 
   if [[ "$1" != "quiet" ]]; then
     echo "Disconnecting..."
@@ -416,11 +415,10 @@ function openvpn_disconnect() {
     manage_ipv6 enable # Enabling IPv6 on machine.
   fi
 
-  while [[ ($counter -lt $max_checks) && ($disconnected == false) ]]; do
+  while [[ $counter -lt $max_checks ]]; do
       pkill -f openvpn
       sleep 0.50
       if [[ $(is_openvpn_currently_running) == false ]]; then
-        disconnected=true
         modify_dns revert_to_backup # Reverting to original DNS entries
         cp "$(get_protonvpn_cli_home)/.connection_config_id" "$(get_protonvpn_cli_home)/.previous_connection_config_id" 2> /dev/null
         cp "$(get_protonvpn_cli_home)/.connection_selected_protocol" "$(get_protonvpn_cli_home)/.previous_connection_selected_protocol" 2> /dev/null
@@ -429,7 +427,7 @@ function openvpn_disconnect() {
         if [[ "$1" != "quiet" ]]; then
           echo "[#] Disconnected."
           echo "[#] Current IP: $(check_ip)"
-          
+
         fi
 
         if [[ "$2" != "dont_exit" ]]; then
