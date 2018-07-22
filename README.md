@@ -41,6 +41,7 @@ $ sudo bash -c "git clone https://github.com/ProtonVPN/protonvpn-cli.git ; ./pro
 | `protonvpn-cli -c [server-name] [protocol]`  | Connect to a ProtonVPN server by name.                       |
 | `protonvpn-cli -r, --random-connect`         | Connect to a random ProtonVPN server.                        |
 | `protonvpn-cli -f, --fastest-connect`        | Connect to the fastest available ProtonVPN server.           |
+| `protonvpn-cli -p, --p2p-connect`            | Connect to the fastest available P2P ProtonVPN server.       |
 | `protonvpn-cli -d, --disconnect`             | Disconnect the current session.                              |
 | `protonvpn-cli --ip`                         | Print the current public IP address.                         |
 | `protonvpn-cli --status`                     | Print connection status.                                     |

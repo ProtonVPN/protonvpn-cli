@@ -654,6 +654,17 @@ function connect_to_fastest_vpn() {
   openvpn_connect "$config_id" "$selected_protocol"
 }
 
+function connect_to_fastest_p2p_vpn() {
+  check_if_profile_initialized
+  check_if_openvpn_is_currently_running
+  check_if_internet_is_working_normally
+
+  echo "Fetching ProtonVPN Servers..."
+  config_id=$(get_fastest_vpn_connection_id "P2P")
+  selected_protocol="udp"
+  openvpn_connect "$config_id" "$selected_protocol"
+}
+
 function connect_to_random_vpn() {
   check_if_profile_initialized
   check_if_openvpn_is_currently_running
@@ -778,6 +789,7 @@ END`
 
 }
 function get_fastest_vpn_connection_id() {
+  required_feature=${1:-}
   response_output=$(wget --header 'x-pm-appversion: Other' \
                          --header 'x-pm-apiversion: 3' \
                          --header 'Accept: application/vnd.protonmail.v1+json' \
@@ -789,6 +801,7 @@ json_parsed_response = json.loads("""$response_output""")
 
 all_features = {"SECURE_CORE": 1, "TOR": 2, "P2P": 4, "XOR": 8, "IPV6": 16}
 excluded_features_on_fastest_connect = ["TOR"]
+required_features = ["$required_feature"] if "$required_feature" in all_features else []
 
 candidates_1 = []
 for _ in json_parsed_response["LogicalServers"]:
@@ -800,6 +813,9 @@ for _ in json_parsed_response["LogicalServers"]:
     is_excluded = False
     for excluded_feature in excluded_features_on_fastest_connect:
         if excluded_feature in server_features:
+            is_excluded = True
+    for required_feature in required_features:
+        if required_feature not in server_features:
             is_excluded = True
     if is_excluded is True:
         continue
@@ -896,6 +912,7 @@ function help_message() {
     echo "   -c [server-name] [protocol]         Connect to a ProtonVPN server by name."
     echo "   -r, --random-connect                Connect to a random ProtonVPN server."
     echo "   -f, --fastest-connect               Connect to the fastest available ProtonVPN server."
+    echo "   -p, --p2p-connect                   Connect to the fastest available P2P ProtonVPN server."
     echo "   -d, --disconnect                    Disconnect the current session."
     echo "   --ip                                Print the current public IP address."
     echo "   --status                            Print connection status."
@@ -918,6 +935,8 @@ case $user_input in
   "-r"|"--r"|"-random"|"--random"|"-random-connect"|"--random-connect") connect_to_random_vpn
     ;;
   "-f"|"--f"|"-fastest"|"--fastest"|"-fastest-connect"|"--fastest-connect") connect_to_fastest_vpn
+    ;;
+  "-p"|"--p"|"-p2p"|"--p2p"|"-p2p-connect"|"--p2p-connect") connect_to_fastest_p2p_vpn
     ;;
   "-c"|"-connect"|"--c"|"--connect")
     if [[ $# == 1 ]]; then
