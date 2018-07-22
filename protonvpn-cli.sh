@@ -406,6 +406,7 @@ function check_if_profile_initialized() {
 function openvpn_disconnect() {
   max_checks=3
   counter=0
+  disconnected=false
 
   if [[ "$1" != "quiet" ]]; then
     echo "Disconnecting..."
@@ -415,10 +416,11 @@ function openvpn_disconnect() {
     manage_ipv6 enable # Enabling IPv6 on machine.
   fi
 
-  while [[ $counter -lt $max_checks ]]; do
+  while [[ ($counter -lt $max_checks) && ($disconnected == false) ]]; do
       pkill -f openvpn
       sleep 0.50
       if [[ $(is_openvpn_currently_running) == false ]]; then
+        disconnected=true
         modify_dns revert_to_backup # Reverting to original DNS entries
         cp "$(get_protonvpn_cli_home)/.connection_config_id" "$(get_protonvpn_cli_home)/.previous_connection_config_id" 2> /dev/null
         cp "$(get_protonvpn_cli_home)/.connection_selected_protocol" "$(get_protonvpn_cli_home)/.previous_connection_selected_protocol" 2> /dev/null
@@ -427,6 +429,7 @@ function openvpn_disconnect() {
         if [[ "$1" != "quiet" ]]; then
           echo "[#] Disconnected."
           echo "[#] Current IP: $(check_ip)"
+          
         fi
 
         if [[ "$2" != "dont_exit" ]]; then
@@ -696,6 +699,25 @@ function connect_to_previous_vpn() {
   config_id=$(cat "$(get_protonvpn_cli_home)/.previous_connection_config_id")
   selected_protocol=$(cat "$(get_protonvpn_cli_home)/.previous_connection_selected_protocol")
   openvpn_connect "$config_id" "$selected_protocol"
+}
+
+function reconnect_to_current_vpn() {
+  check_if_profile_initialized
+
+  if [[ ($(is_openvpn_currently_running) == false) || (! -f "$(get_protonvpn_cli_home)/.connection_config_id") ]] ; then
+    echo "[!] Error: ProtonVPN is not currently running."
+    exit 1
+  fi
+
+  openvpn_disconnect "quiet" "dont_exit"
+  if [[ $(is_openvpn_currently_running) == true ]]; then  # checking if it OpenVPN is still active.
+    echo "[!] Error disconnecting OpenVPN."
+    exit 1
+  else
+    echo "[#] Disconnected."
+  fi
+  echo "Reconnecting..."
+  connect_to_previous_vpn
 }
 
 
@@ -1034,6 +1056,7 @@ function help_message() {
     echo "   -cc, --country-connect              Select and connect to a ProtonVPN server by country."
     echo "   -cc [country-name] [protocol]       Connect to the fastest available server in a specific country."
     echo "   -d, --disconnect                    Disconnect the current session."
+    echo "   --reconnect                         Reconnect to the current server."
     echo "   --ip                                Print the current public IP address."
     echo "   --status                            Print connection status."
     echo "   --update                            Update protonvpn-cli."
@@ -1051,6 +1074,8 @@ case $user_input in
   ""|"-h"|"--help"|"--h"|"-help"|"help") help_message
     ;;
   "-d"|"--d"|"-disconnect"|"--disconnect") openvpn_disconnect
+    ;;
+  "-reconnect"|"--reconnect") reconnect_to_current_vpn
     ;;
   "-r"|"--r"|"-random"|"--random"|"-random-connect"|"--random-connect") connect_to_random_vpn
     ;;
