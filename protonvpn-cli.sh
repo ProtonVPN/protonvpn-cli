@@ -196,7 +196,10 @@ function init_cli() {
   read -p "Would you like to use a custom DNS server? (Warning: This would make your VPN connection vulnerable to DNS leaks. Only use it when you know what you're doing) [Y/N] (Default: N): " "use_custom_dns"
 
   if  [[ ("$use_custom_dns" == "y" || "$use_custom_dns" == "Y") ]]; then
-     read -p "Custom DNS Server: " "custom_dns"
+     custom_dns=""
+     while [[ $custom_dns == "" ]]; do
+       read -p "Custom DNS Server: " "custom_dns"
+     done
      echo -e "$custom_dns" > "$(get_protonvpn_cli_home)/.custom_dns"
      chown "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/.custom_dns"
      chmod 0400 "$(get_protonvpn_cli_home)/.custom_dns"
@@ -313,14 +316,14 @@ function modify_dns() {
         networksetup -getdnsservers "$interface" > "$(get_protonvpn_cli_home)/$interface.dns_backup"
       done
     else # non-Mac
-      cp "/etc/resolv.conf" "/etc/resolv.conf.protonvpn_backup"
+      cp "/etc/resolv.conf" "$(get_protonvpn_cli_home)/.resolv.conf.protonvpn_backup"
     fi
   fi
 
   # Apply ProtonVPN DNS
   if [[ ("$1" == "to_protonvpn_dns") ]]; then
       connection_logs="$(get_protonvpn_cli_home)/connection_logs"
-      dns_server=$(cat "$connection_logs" | grep 'dhcp-option DNS' | head -n 1 | awk -F 'dhcp-option DNS ' '{print $2}' | cut -d ',' -f1) # protonvpn internal dns
+      dns_server=$(grep 'dhcp-option DNS' "$connection_logs" | head -n 1 | awk -F 'dhcp-option DNS ' '{print $2}' | cut -d ',' -f1) # protonvpn internal dns
 
     if [[ ( $(detect_platform_type) == "MacOS" ) ]]; then
       networksetup listallnetworkservices | tail +2 | while read interface; do
@@ -359,7 +362,7 @@ function modify_dns() {
         fi
       done
     else # non-Mac
-      cp "/etc/resolv.conf.protonvpn_backup" "/etc/resolv.conf"
+      cp "$(get_protonvpn_cli_home)/.resolv.conf.protonvpn_backup" "/etc/resolv.conf"
     fi
   fi
 }
