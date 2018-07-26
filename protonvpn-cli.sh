@@ -1042,6 +1042,18 @@ END`
   echo "$output"
 }
 
+function show_version() {
+
+    version=0.1.0
+    echo
+    echo -e "ProtonVPN Command-Line Tool version $version"
+    echo "Copyright (c) 2013-2018 Proton Technologies A.G. (Switzerland)"
+    echo "Distributed under the MIT software license, see the accompanying file license.md"
+    echo
+
+    exit 0
+}
+
 function help_message() {
     echo
     echo -e "ProtonVPN Command-Line Tool\n"
@@ -1063,6 +1075,7 @@ function help_message() {
     echo "   --update                            Update protonvpn-cli."
     echo "   --install                           Install protonvpn-cli."
     echo "   --uninstall                         Uninstall protonvpn-cli."
+    echo "   -v, --version                       Display version."
     echo "   -h, --help                          Show this help message."
     echo
 
@@ -1073,6 +1086,8 @@ check_requirements
 user_input="$1"
 case $user_input in
   ""|"-h"|"--help"|"--h"|"-help"|"help") help_message
+    ;;
+  "-v"|"--v"|"-version"|"--version") show_version
     ;;
   "-d"|"--d"|"-disconnect"|"--disconnect") openvpn_disconnect
     ;;
