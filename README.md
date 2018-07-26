@@ -59,6 +59,7 @@ $ wget "https://github.com/ProtonVPN/protonvpn-cli/raw/master/protonvpn-cli.sh" 
 | `protonvpn-cli --update`                      | Update protonvpn-cli.                                          |
 | `protonvpn-cli --install`                     | Install protonvpn-cli.                                         |
 | `protonvpn-cli --uninstall`                   | Uninstall protonvpn-cli.                                       |
+| `protonvpn-cli --version`                     | Display version.                                               |
 | `protonvpn-cli --help`                        | Show help message.                                             |
 
 

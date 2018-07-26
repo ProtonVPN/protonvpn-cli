@@ -7,7 +7,7 @@
 ###
 #Author: Mazin Ahmed <Mazin AT ProtonMail DOT ch>
 ######################################################
-
+version=1.1.0
 
 if [[ ("$UID" != 0) && ("$1" != "ip") && ("$1" != "-ip") && \
       ("$1" != "--ip") && !( -z "$1") && ("$1" != "-h") && \
@@ -1043,20 +1043,16 @@ END`
 }
 
 function show_version() {
-
-    version=0.1.0
     echo
-    echo -e "ProtonVPN Command-Line Tool version $version"
+    echo -e "ProtonVPN Command-Line Tool - v$version"
     echo "Copyright (c) 2013-2018 Proton Technologies A.G. (Switzerland)"
     echo "Distributed under the MIT software license, see the accompanying file license.md"
     echo
-
-    exit 0
 }
 
 function help_message() {
     echo
-    echo -e "ProtonVPN Command-Line Tool\n"
+    echo -e "ProtonVPN Command-Line Tool - v$version\n"
     echo -e "Usage: $(basename $0) [option]\n"
     echo "Options:"
     echo "   --init                              Initialize ProtonVPN profile on the machine."
