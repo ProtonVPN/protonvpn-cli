@@ -421,16 +421,17 @@ function openvpn_disconnect() {
         if [[ "$1" != "quiet" ]]; then
           echo "[#] Disconnected."
           echo "[#] Current IP: $(check_ip)"
-
         fi
 
         if [[ "$2" != "dont_exit" ]]; then
           exit 0
+        else
+          break
         fi
-
       fi
     counter=$((counter+1))
   done
+
   if [[ "$1" != "quiet" ]]; then
     echo "[!] Error disconnecting OpenVPN."
 
