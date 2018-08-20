@@ -989,21 +989,6 @@ END`
   echo "$output"
 }
 
-function get_vpn_tier() {
-  response_cache_path="$(get_protonvpn_cli_home)/.response_cache"
-  output=`$python <<END
-import json
-response_cache_fileread = open("""$response_cache_path""", "r").read()
-json_parsed_response = json.loads(response_cache_fileread)
-for _ in json_parsed_response["LogicalServers"]:
-    if (_["ID"] == """$1"""):
-        print(_["Tier"])
-        break
-END`
-
-  echo "$output"
-}
-
 function get_vpn_config_details() {
   response_output=$(wget --header 'x-pm-appversion: Other' \
                          --header 'x-pm-apiversion: 3' \
