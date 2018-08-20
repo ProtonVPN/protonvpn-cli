@@ -132,16 +132,6 @@ function check_ip() {
   echo "$ip"
 }
 
-function cli_debug() {
-  if [[ "$PROTONVPN_CLI_DEBUG" == "true" ]]; then
-    if [[ "$1" == "stdout" ]]; then
-      echo "$2" > "/dev/stdout"
-    elif [[ "$1" == "stderr" ]]; then
-      echo "$2" > "/dev/stderr"
-    fi
-  fi
-}
-
 function create_vi_bindings() {
     echo -en "
 bindkey menubox \\j ITEM_NEXT
