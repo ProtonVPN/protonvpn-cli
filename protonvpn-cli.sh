@@ -106,6 +106,7 @@ function install_update_resolv_conf() {
     echo "[*] Done."
   else
     echo "[!] Error installing update-resolv-conf."
+    rm -f "/etc/openvpn/update-resolv-conf" 2> /dev/null
     exit 1
   fi
 }
