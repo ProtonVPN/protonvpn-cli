@@ -844,10 +844,12 @@ for _ in json_parsed_response["LogicalServers"]:
         for f in all_features.keys():
             if (server_features_index & all_features[f]) > 0:
                 server_features.append(f)
+        if _["Tier"] == 2:
+            server_features.append("Plus")
         if len(server_features) == 0:
             server_features_value = "None"
         else:
-            server_features_value = ", ".join(server_features)
+            server_features_value = ",".join(server_features)
         output = "%s@%s@%s@%s@%s"%(_["Name"], _["ExitCountry"], _["Tier"], server_features_value, _["Load"])
         break
 print(output)
@@ -883,7 +885,8 @@ for _ in output:
   for f in all_features.keys():
       if (server_features_index & all_features[f]) > 0:
           server_features.append(f)
-
+  if _["Tier"] == 2:
+      server_features.append("Plus")
   if len(server_features) == 0:
       server_features_output = "None"
   else:
@@ -942,6 +945,8 @@ for _ in json_parsed_response["LogicalServers"]:
     for f in all_features.keys():
         if (server_features_index & all_features[f]) > 0:
             server_features.append(f)
+    if _["Tier"] == 2:
+        server_features.append("Plus")
     is_excluded = False
     for excluded_feature in excluded_features_on_fastest_connect:
         if excluded_feature in server_features:
@@ -1020,6 +1025,8 @@ for _ in output:
     for f in all_features.keys():
         if (server_features_index & all_features[f]) > 0:
             server_features.append(f)
+    if _["Tier"] == 2:
+        server_features.append("Plus")
     if len(server_features) == 0:
         server_features_output = "None"
     else:
