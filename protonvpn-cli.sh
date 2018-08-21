@@ -50,6 +50,13 @@ function check_requirements() {
     exit 1
   fi
 
+  if [[ $(detect_platform_type) == "Linux" ]]; then
+    if [[ ( -z $(which iptables) ) ||  ( -z $(which iptables-save) ) || ( -z $(which iptables-restore) ) ]]; then
+      echo "[!] Error: iptables is not installed. Install \`iptables\` package to continue."
+      exit 1
+    fi
+  fi
+
   sha512sum_func
   if [[ -z "$sha512sum_tool" ]]; then
     echo "[!] Error: sha512sum is not installed. Install \`sha512sum\` package to continue."
@@ -184,7 +191,7 @@ function init_cli() {
   chown "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/protonvpn_tier"
   chmod 0400 "$(get_protonvpn_cli_home)/protonvpn_tier"
 
-  read -p "Would you like to use a custom DNS server? (Warning: This would make your VPN connection vulnerable to DNS leaks. Only use it when you know what you're doing) [Y/N] (Default: N): " "use_custom_dns"
+  read -p "[.] Would you like to use a custom DNS server? (Warning: This would make your VPN connection vulnerable to DNS leaks. Only use it when you know what you're doing) [Y/N] (Default: N): " "use_custom_dns"
 
   if  [[ ("$use_custom_dns" == "y" || "$use_custom_dns" == "Y") ]]; then
      custom_dns=""
@@ -194,6 +201,11 @@ function init_cli() {
      echo -e "$custom_dns" > "$(get_protonvpn_cli_home)/.custom_dns"
      chown "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/.custom_dns"
      chmod 0400 "$(get_protonvpn_cli_home)/.custom_dns"
+  fi
+
+  read -p "[.] Enable Killswitch? [Y/N] (Default: Y): " "enable_killswitch"
+  if [[ "$enable_killswitch" == "n" || "$enable_killswitch" == "N" ]]; then
+    echo > "$(get_protonvpn_cli_home)/.disable_killswitch"
   fi
 
   chown -R "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/"
@@ -414,6 +426,7 @@ function openvpn_disconnect() {
       sleep 0.50
       if [[ $(is_openvpn_currently_running) == false ]]; then
         modify_dns revert_to_backup # Reverting to original DNS entries
+        killswitch disable # Disabling killswitch
         cp "$(get_protonvpn_cli_home)/.connection_config_id" "$(get_protonvpn_cli_home)/.previous_connection_config_id" 2> /dev/null
         cp "$(get_protonvpn_cli_home)/.connection_selected_protocol" "$(get_protonvpn_cli_home)/.previous_connection_selected_protocol" 2> /dev/null
         rm -f  "$(get_protonvpn_cli_home)/.connection_config_id" "$(get_protonvpn_cli_home)/.connection_selected_protocol" 2> /dev/null
@@ -447,6 +460,7 @@ function openvpn_connect() {
 
   modify_dns backup # Backing-up current DNS entries
   manage_ipv6 disable # Disabling IPv6 on machine.
+  killswitch backup_rules # Backing-up firewall rules
 
   config_id=$1
   selected_protocol=$2
@@ -456,8 +470,10 @@ function openvpn_connect() {
 
   current_ip="$(check_ip)"
   connection_logs="$(get_protonvpn_cli_home)/connection_logs"
+  openvpn_config="$(get_protonvpn_cli_home)/protonvpn_openvpn_config.conf"
 
   rm -f "$connection_logs"  # Remove previous connection logs
+  rm -f "$openvpn_config" # Remove previous openvpn config
 
   if [[ "$PROTONVPN_CLI_LOG" == "true" ]]; then  # PROTONVPN_CLI_LOG is retrieved from env.
     # This option only prints the path of connection_logs to end-user
@@ -468,8 +484,9 @@ function openvpn_connect() {
       wget --header 'x-pm-appversion: Other' \
          --header 'x-pm-apiversion: 3' \
          --header 'Accept: application/vnd.protonmail.v1+json' \
-         --timeout 10 --tries 1 -q -O - "https://api.protonmail.ch/vpn/config?Platform=$(detect_platform_type)&LogicalID=$config_id&Protocol=$selected_protocol" \
-         | openvpn --daemon --config "/dev/stdin" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-retry nointeract --verb 4 --log "$connection_logs"
+         --timeout 10 --tries 1 -q -O "$openvpn_config" "https://api.protonmail.ch/vpn/config?Platform=$(detect_platform_type)&LogicalID=$config_id&Protocol=$selected_protocol" \
+
+      openvpn --daemon --config "$openvpn_config" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-retry nointeract --verb 4 --log "$connection_logs"
 
   echo "Connecting..."
 
@@ -482,13 +499,16 @@ function openvpn_connect() {
       echo "[$] Connected!"
       echo "[#] New IP: $new_ip"
 
-        # DNS management
-        if [[ -f "$(get_protonvpn_cli_home)/.custom_dns" ]]; then
-          modify_dns to_custom_dns # Use Custom DNS
-          echo "[Warning] You have chosen to use a custom DNS server. This may make you vulnerable to DNS leaks. Re-initialize your profile to disable the use of custom DNS."
-        else
-          modify_dns to_protonvpn_dns # Use protonvpn DNS server
-        fi
+      # DNS management
+      if [[ -f "$(get_protonvpn_cli_home)/.custom_dns" ]]; then
+        modify_dns to_custom_dns # Use Custom DNS
+        echo "[Warning] You have chosen to use a custom DNS server. This may make you vulnerable to DNS leaks. Re-initialize your profile to disable the use of custom DNS."
+      else
+        modify_dns to_protonvpn_dns # Use protonvpn DNS server
+      fi
+
+      killswitch enable # Enable killswitch
+
       echo "$config_id" > "$(get_protonvpn_cli_home)/.connection_config_id"
       echo "$selected_protocol" > "$(get_protonvpn_cli_home)/.connection_selected_protocol"
       exit 0
@@ -642,6 +662,62 @@ function print_console_status() {
   fi
     exit 0
 
+}
+
+function get_openvpn_config_info() {
+  vpn_ip=$(awk '$1 == "remote" {print $2}' "$(get_protonvpn_cli_home)/protonvpn_openvpn_config.conf")
+  vpn_port=$(awk '$1 == "remote" {print $3}' "$(get_protonvpn_cli_home)/protonvpn_openvpn_config.conf")
+  vpn_type=$(awk '$1 == "proto" {print $2}' "$(get_protonvpn_cli_home)/protonvpn_openvpn_config.conf")
+  vpn_device_name=$(grep -P "TUN/TAP device (.)+ opened" "$(get_protonvpn_cli_home)/connection_logs" | cut -d " " -f9)
+  echo "$vpn_ip@$vpn_port@$vpn_type@$vpn_device_name"
+}
+
+function killswitch() {
+  if [[ -f "$(get_protonvpn_cli_home)/.disable_killswitch" ]]; then
+    return
+  fi
+
+  if [[ $1 == "backup_rules" ]]; then
+    if [[ $(detect_platform_type) == "Linux" ]]; then
+      iptables-save > "$(get_protonvpn_cli_home)/.iptables.save"
+    elif [[ $(detect_platform_type) == "MacOS" ]]; then
+      # Todo: logic
+      false
+    fi
+  fi
+
+  if [[ $1 == "enable" ]]; then
+    if [[ $(detect_platform_type) == "Linux" ]]; then
+      vpn_port=$(get_openvpn_config_info | cut -d "@" -f2)
+      vpn_type=$(get_openvpn_config_info | cut -d "@" -f3)
+      vpn_device_name=$(get_openvpn_config_info | cut -d "@" -f4)
+      iptables -F
+      iptables -P INPUT DROP
+      iptables -P OUTPUT DROP
+      iptables -P FORWARD DROP
+
+      iptables -A OUTPUT -o "$vpn_device_name" -j ACCEPT
+      iptables -A INPUT -i "$vpn_device_name" -j ACCEPT
+      iptables -A INPUT -i "$vpn_device_name" -m state --state ESTABLISHED,RELATED -j ACCEPT
+      iptables -A OUTPUT -o "$vpn_device_name" -m state --state ESTABLISHED,RELATED -j ACCEPT
+      iptables -A OUTPUT -p "$vpn_type" -m "$vpn_type" --dport "$vpn_port" -j ACCEPT
+      iptables -A INPUT -p "$vpn_type" -m "$vpn_type" --sport "$vpn_port" -j ACCEPT
+
+    elif [[ $(detect_platform_type) == "MacOS" ]]; then
+     # Todo: logic
+     false
+    fi
+  fi
+
+  if [[ $1 == "disable" ]]; then
+    if [[ $(detect_platform_type) == "Linux" ]]; then
+      iptables -F
+      iptables-restore < "$(get_protonvpn_cli_home)/.iptables.save"
+    elif [[ $(detect_platform_type) == "MacOS" ]]; then
+      # Todo: logic
+      false
+    fi
+  fi
 }
 
 function connect_to_fastest_vpn() {
