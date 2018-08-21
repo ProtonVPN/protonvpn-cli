@@ -773,7 +773,7 @@ function connect_to_previous_vpn() {
 function reconnect_to_current_vpn() {
   check_if_profile_initialized
 
-  if [[ ($(is_openvpn_currently_running) == false) || (! -f "$(get_protonvpn_cli_home)/.connection_config_id") ]] ; then
+  if [[ ! -f "$(get_protonvpn_cli_home)/.connection_config_id" ]] ; then
     echo "[!] Error: ProtonVPN is not currently running."
     exit 1
   fi
