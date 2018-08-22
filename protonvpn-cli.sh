@@ -521,7 +521,7 @@ function openvpn_connect() {
   if [[ ! -z $(cat "$connection_logs" | grep "AUTH_FAILED") ]]; then
     echo "[!] Reason: Authentication failed. Please check your ProtonVPN OpenVPN credentials."
   fi
-  openvpn_disconnect quiet
+  openvpn_disconnect quiet dont_exit
   exit 1
 }
 
