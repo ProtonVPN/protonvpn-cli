@@ -292,11 +292,11 @@ function manage_ipv6() {
 
   # Restore IPv6 in macOS.
   if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_services" ) && ( $(detect_platform_type) == "MacOS" ) ]]; then
-    if [[ $(cat "$(get_protonvpn_cli_home)/.ipv6_services") == "" ]] ; then
+    if [[ $(< "$(get_protonvpn_cli_home)/.ipv6_services") == "" ]] ; then
       return
     fi
 
-    ipv6_service=$(cat "$(get_protonvpn_cli_home)/.ipv6_services")
+    ipv6_service=$(< "$(get_protonvpn_cli_home)/.ipv6_services")
 
     while read ipv6_service ; do
       networksetup -setv6automatic "$ipv6_service"
@@ -340,7 +340,7 @@ function modify_dns() {
   # Apply Custom DNS.
   if [[ ("$1" == "to_custom_dns") ]]; then
       custom_dns="$(get_protonvpn_cli_home)/.custom_dns"
-      dns_server=$(cat "$custom_dns")
+      dns_server=$(< "$custom_dns")
 
     if [[ ( $(detect_platform_type) == "MacOS" ) ]]; then
       networksetup listallnetworkservices | tail +2 | while read interface; do
@@ -518,7 +518,7 @@ function openvpn_connect() {
   done
 
   echo "[!] Error connecting to VPN."
-  if [[ ! -z $(cat "$connection_logs" | grep "AUTH_FAILED") ]]; then
+  if [[ ! -z $(< "$connection_logs" | grep "AUTH_FAILED") ]]; then
     echo "[!] Reason: Authentication failed. Please check your ProtonVPN OpenVPN credentials."
   fi
   openvpn_disconnect quiet dont_exit
@@ -643,14 +643,14 @@ function print_console_status() {
     echo "[Public IP Address]: $current_ip"
   fi
   if [[ -f "$(get_protonvpn_cli_home)/.connection_config_id" ]]; then
-    config_id=$(cat "$(get_protonvpn_cli_home)/.connection_config_id")
+    config_id=$(< "$(get_protonvpn_cli_home)/.connection_config_id")
     vpn_server_details=$(get_vpn_server_details "$config_id")
     server_name=$(echo "$vpn_server_details" | cut -d '@' -f1)
     server_exit_country=$(echo "$vpn_server_details" | cut -d '@' -f2)
     server_tier=$(echo "$vpn_server_details" | cut -d '@' -f3)
     server_features=$(echo "$vpn_server_details" | cut -d '@' -f4)
     server_load=$(echo "$vpn_server_details" | cut -d '@' -f5)
-    selected_protocol=$(cat "$(get_protonvpn_cli_home)/.connection_selected_protocol" | tr '[:lower:]' '[:upper:]')
+    selected_protocol=$(< "$(get_protonvpn_cli_home)/.connection_selected_protocol" | tr '[:lower:]' '[:upper:]')
 
     echo "[ProtonVPN] [Server Name]: $server_name"
     echo "[ProtonVPN] [OpenVPN Protocol]: $selected_protocol"
@@ -765,8 +765,8 @@ function connect_to_previous_vpn() {
     exit 1
   fi
 
-  config_id=$(cat "$(get_protonvpn_cli_home)/.previous_connection_config_id")
-  selected_protocol=$(cat "$(get_protonvpn_cli_home)/.previous_connection_selected_protocol")
+  config_id=$(< "$(get_protonvpn_cli_home)/.previous_connection_config_id")
+  selected_protocol=$(< "$(get_protonvpn_cli_home)/.previous_connection_selected_protocol")
   openvpn_connect "$config_id" "$selected_protocol"
 }
 
@@ -940,7 +940,7 @@ function get_country_vpn_servers_details() {
                          --header 'x-pm-apiversion: 3' \
                          --header 'Accept: application/vnd.protonmail.v1+json' \
                          --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
-  tier=$(cat "$(get_protonvpn_cli_home)/protonvpn_tier")
+  tier=$(< "$(get_protonvpn_cli_home)/protonvpn_tier")
   user_chosen_specific_country="$1"
   output=`python <<END
 import json
@@ -1005,7 +1005,7 @@ function get_fastest_vpn_connection_id() {
                          --header 'x-pm-apiversion: 3' \
                          --header 'Accept: application/vnd.protonmail.v1+json' \
                          --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
-  tier=$(cat "$(get_protonvpn_cli_home)/protonvpn_tier")
+  tier=$(< "$(get_protonvpn_cli_home)/protonvpn_tier")
   output=`$python <<END
 import json, math, random
 json_parsed_response = json.loads("""$response_output""")
@@ -1051,7 +1051,7 @@ function get_random_vpn_connection_id() {
                          --header 'x-pm-apiversion: 3' \
                          --header 'Accept: application/vnd.protonmail.v1+json' \
                          --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
-  tier=$(cat "$(get_protonvpn_cli_home)/protonvpn_tier")
+  tier=$(< "$(get_protonvpn_cli_home)/protonvpn_tier")
   output=`$python <<END
 import json, random
 json_parsed_response = json.loads("""$response_output""")
@@ -1070,7 +1070,7 @@ function get_vpn_config_details() {
                          --header 'x-pm-apiversion: 3' \
                          --header 'Accept: application/vnd.protonmail.v1+json' \
                          --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
-  tier=$(cat "$(get_protonvpn_cli_home)/protonvpn_tier")
+  tier=$(< "$(get_protonvpn_cli_home)/protonvpn_tier")
   output=`$python <<END
 import json, random
 json_parsed_response = json.loads("""$response_output""")
@@ -1106,7 +1106,7 @@ function show_version() {
     echo
     echo -e "ProtonVPN Command-Line Tool – v$version"
     echo "Copyright (c) 2013-2018 Proton Technologies A.G. (Switzerland)"
-    echo "Distributed under the MIT software license, see the accompanying file license.md"
+    echo "Distributed under the MIT software license (see the accompanying file license.md)."
     echo
 }
 
