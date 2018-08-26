@@ -360,7 +360,7 @@ function modify_dns() {
           if grep -q "There aren't any DNS Servers set" "$file"; then
             networksetup -setdnsservers "$interface" empty
           else
-            networksetup -setdnsservers "$interface" $(< $file)
+            networksetup -setdnsservers "$interface" $(< "$file")
           fi
         fi
       done
