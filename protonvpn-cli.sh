@@ -66,7 +66,7 @@ function check_requirements() {
   if [[ (! -x "/etc/openvpn/update-resolv-conf") && ( $(detect_platform_type) != "MacOS") ]]; then
     echo "[!] Error: update-resolv-conf is not installed."
     read -p "Would you like protonvpn-cli to install update-resolv-conf? (y/N): " "user_confirm"
-    if [[ "$user_confirm" == "Y" ]]; then
+    if [[ "$user_confirm" == "y" || "$user_confirm" == "Y" ]]; then
       install_update_resolv_conf
     else
       exit 1
