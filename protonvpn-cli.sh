@@ -65,7 +65,7 @@ function check_requirements() {
 
   if [[ (! -x "/etc/openvpn/update-resolv-conf") && ( $(detect_platform_type) != "MacOS") ]]; then
     echo "[!] Error: update-resolv-conf is not installed."
-    read -p "Would you like protonvpn-cli to install update-resolv-conf? (Y/N) (Default: N): " "user_confirm"
+    read -p "Would you like protonvpn-cli to install update-resolv-conf? (y/N): " "user_confirm"
     if [[ "$user_confirm" == "Y" ]]; then
       install_update_resolv_conf
     else
@@ -101,7 +101,7 @@ function get_protonvpn_cli_home() {
 
 function install_update_resolv_conf() {
   if [[ ("$UID" != 0) ]]; then
-    echo "[!] Error: installation requires root access."
+    echo "[!] Error: Installation requires root access."
     exit 1
   fi
   echo "[*] Installing update-resolv-conf..."
@@ -133,7 +133,7 @@ function check_ip() {
       ip="Error."
     fi
     if [[ -z "$ip" ]]; then
-      sleep 2  # sleep for 2 seconds before retrying
+      sleep 2  # Sleep for 2 seconds before retrying.
     fi
   done
   echo "$ip"
@@ -153,7 +153,7 @@ bindkey menubox \\h FIELD_NEXT
 
 function init_cli() {
   if [[ -f "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" ]]; then
-    echo -n "[!] user profile for protonvpn-cli has already been initialized. Would you like to start over with a fresh configuration? [Y/N] (Default: Y): "
+    echo -n "[!] User profile for protonvpn-cli has already been initialized. Would you like to start over with a fresh configuration? [Y/n]: "
     read "reset_profile"
   fi
   if  [[ ("$reset_profile" == "n" || "$reset_profile" == "N") ]]; then
@@ -191,7 +191,7 @@ function init_cli() {
   chown "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/protonvpn_tier"
   chmod 0400 "$(get_protonvpn_cli_home)/protonvpn_tier"
 
-  read -p "[.] Would you like to use a custom DNS server? (Warning: This would make your VPN connection vulnerable to DNS leaks. Only use it when you know what you're doing) [Y/N] (Default: N): " "use_custom_dns"
+  read -p "[.] Would you like to use a custom DNS server? (Warning: This would make your VPN connection vulnerable to DNS leaks. Only use it when you know what you're doing) [y/N]: " "use_custom_dns"
 
   if  [[ ("$use_custom_dns" == "y" || "$use_custom_dns" == "Y") ]]; then
      custom_dns=""
@@ -203,7 +203,7 @@ function init_cli() {
      chmod 0400 "$(get_protonvpn_cli_home)/.custom_dns"
   fi
 
-  read -p "[.] Enable Killswitch? [Y/N] (Default: Y): " "enable_killswitch"
+  read -p "[.] Enable Killswitch? [Y/n]: " "enable_killswitch"
   if [[ "$enable_killswitch" == "n" || "$enable_killswitch" == "N" ]]; then
     echo > "$(get_protonvpn_cli_home)/.disable_killswitch"
   fi
@@ -267,7 +267,7 @@ function manage_ipv6() {
   fi
 
   if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_address" ) && ( $(detect_platform_type) != "MacOS" ) ]]; then
-    echo "[!] This is an error in enabling ipv6 on the machine. Please enable it manually."
+    echo "[!] This is an error in enabling IPv6 on the machine. Please enable it manually."
   fi
 
   if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_address" ) && ( $(detect_platform_type) != "MacOS" ) ]]; then
@@ -312,7 +312,7 @@ function manage_ipv6() {
 }
 
 function modify_dns() {
-  # Backup DNS entries
+  # Backup DNS entries.
   if [[ ("$1" == "backup")]]; then
     if [[  ( $(detect_platform_type) == "MacOS" ) ]]; then
       networksetup listallnetworkservices | tail +2 | while read interface; do
@@ -323,10 +323,10 @@ function modify_dns() {
     fi
   fi
 
-  # Apply ProtonVPN DNS
+  # Apply ProtonVPN DNS.
   if [[ ("$1" == "to_protonvpn_dns") ]]; then
       connection_logs="$(get_protonvpn_cli_home)/connection_logs"
-      dns_server=$(grep 'dhcp-option DNS' "$connection_logs" | head -n 1 | awk -F 'dhcp-option DNS ' '{print $2}' | cut -d ',' -f1) # protonvpn internal dns
+      dns_server=$(grep 'dhcp-option DNS' "$connection_logs" | head -n 1 | awk -F 'dhcp-option DNS ' '{print $2}' | cut -d ',' -f1) # ProtonVPN internal DNS.
 
     if [[ ( $(detect_platform_type) == "MacOS" ) ]]; then
       networksetup listallnetworkservices | tail +2 | while read interface; do
@@ -337,7 +337,7 @@ function modify_dns() {
     fi
   fi
 
-  # Apply Custom DNS
+  # Apply Custom DNS.
   if [[ ("$1" == "to_custom_dns") ]]; then
       custom_dns="$(get_protonvpn_cli_home)/.custom_dns"
       dns_server=$(cat "$custom_dns")
@@ -351,7 +351,7 @@ function modify_dns() {
     fi
   fi
 
-  # Restore backed-up DNS entries
+  # Restore backed-up DNS entries.
   if [[ "$1" == "revert_to_backup" ]]; then
     if [[  ( $(detect_platform_type) == "MacOS" )  ]]; then
       networksetup listallnetworkservices | tail +2 | while read interface; do
@@ -458,9 +458,9 @@ function openvpn_disconnect() {
 function openvpn_connect() {
   check_if_openvpn_is_currently_running
 
-  modify_dns backup # Backing-up current DNS entries
+  modify_dns backup # Backing-up current DNS entries.
   manage_ipv6 disable # Disabling IPv6 on machine.
-  # killswitch backup_rules # Backing-up firewall rules
+  # killswitch backup_rules # Backing-up firewall rules.
 
   config_id=$1
   selected_protocol=$2
@@ -472,11 +472,11 @@ function openvpn_connect() {
   connection_logs="$(get_protonvpn_cli_home)/connection_logs"
   openvpn_config="$(get_protonvpn_cli_home)/protonvpn_openvpn_config.conf"
 
-  rm -f "$connection_logs"  # Remove previous connection logs
-  rm -f "$openvpn_config" # Remove previous openvpn config
+  rm -f "$connection_logs"  # Remove previous connection logs.
+  rm -f "$openvpn_config" # Remove previous openvpn config.
 
   if [[ "$PROTONVPN_CLI_LOG" == "true" ]]; then  # PROTONVPN_CLI_LOG is retrieved from env.
-    # This option only prints the path of connection_logs to end-user
+    # This option only prints the path of connection_logs to end-user.
     echo "[*] CLI logging mode enabled."
     echo -e "[*] Logs path: $connection_logs"
   fi
@@ -501,10 +501,10 @@ function openvpn_connect() {
 
       # DNS management
       if [[ -f "$(get_protonvpn_cli_home)/.custom_dns" ]]; then
-        modify_dns to_custom_dns # Use Custom DNS
+        modify_dns to_custom_dns # Use Custom DNS.
         echo "[Warning] You have chosen to use a custom DNS server. This may make you vulnerable to DNS leaks. Re-initialize your profile to disable the use of custom DNS."
       else
-        modify_dns to_protonvpn_dns # Use protonvpn DNS server
+        modify_dns to_protonvpn_dns # Use ProtonVPN DNS server.
       fi
 
       # killswitch enable # Enable killswitch
@@ -533,7 +533,7 @@ function update_cli() {
     echo "[!] Error: protonvpn-cli does not seem to be installed."
     exit 1
   fi
-  echo "[#] Checking for update."
+  echo "[#] Checking for update..."
   current_local_hashsum=$($sha512sum_tool "$cli_path" | cut -d " " -f1)
   remote_=$(wget --timeout 6 -q -O - 'https://raw.githubusercontent.com/ProtonVPN/protonvpn-cli/master/protonvpn-cli.sh')
   if [[ $? != 0 ]]; then
@@ -596,7 +596,7 @@ function uninstall_cli() {
     echo "[!] OpenVPN is currently running."
     echo "[!] Session will be disconnected."
     openvpn_disconnect quiet dont_exit
-    if [[ $(is_openvpn_currently_running) == true ]]; then  # checking if it OpenVPN is still active.
+    if [[ $(is_openvpn_currently_running) == true ]]; then  # Checking if OpenVPN is still active.
       echo "[!] Error disconnecting OpenVPN."
       echo "[!] Please disconnect manually and try the uninstallation again."
       exit 1
@@ -725,7 +725,7 @@ function connect_to_fastest_vpn() {
   check_if_openvpn_is_currently_running
   check_if_internet_is_working_normally
 
-  echo "Fetching ProtonVPN Servers..."
+  echo "Fetching ProtonVPN servers..."
   config_id=$(get_fastest_vpn_connection_id)
   selected_protocol="udp"
   openvpn_connect "$config_id" "$selected_protocol"
@@ -736,7 +736,7 @@ function connect_to_fastest_p2p_vpn() {
   check_if_openvpn_is_currently_running
   check_if_internet_is_working_normally
 
-  echo "Fetching ProtonVPN Servers..."
+  echo "Fetching ProtonVPN servers..."
   config_id=$(get_fastest_vpn_connection_id "P2P")
   selected_protocol="udp"
   openvpn_connect "$config_id" "$selected_protocol"
@@ -747,7 +747,7 @@ function connect_to_random_vpn() {
   check_if_openvpn_is_currently_running
   check_if_internet_is_working_normally
 
-  echo "Fetching ProtonVPN Servers..."
+  echo "Fetching ProtonVPN servers..."
   config_id=$(get_random_vpn_connection_id)
   available_protocols=("tcp" "udp")
   selected_protocol=${available_protocols[$RANDOM % ${#available_protocols[@]}]}
@@ -779,7 +779,7 @@ function reconnect_to_current_vpn() {
   fi
 
   openvpn_disconnect "quiet" "dont_exit"
-  if [[ $(is_openvpn_currently_running) == true ]]; then  # checking if it OpenVPN is still active.
+  if [[ $(is_openvpn_currently_running) == true ]]; then  # Checking if it OpenVPN is still active.
     echo "[!] Error disconnecting OpenVPN."
     exit 1
   else
@@ -795,7 +795,7 @@ function connect_to_specific_server() {
   check_if_openvpn_is_currently_running
   check_if_internet_is_working_normally
 
-  echo "Fetching ProtonVPN Servers..."
+  echo "Fetching ProtonVPN servers..."
 
   if [[ "$3" == "server" ]]; then
     server_list=$(get_vpn_config_details | tr ' ' '@')
@@ -851,7 +851,7 @@ function connection_to_vpn_via_dialog_menu() {
   IFS=$'\n'
   ARRAY=()
 
-  echo "Fetching ProtonVPN Servers..."
+  echo "Fetching ProtonVPN servers..."
 
   if [[ "$1" == "servers" ]]; then
     c2=$(get_vpn_config_details)
@@ -869,7 +869,7 @@ function connection_to_vpn_via_dialog_menu() {
     ARRAY+=($data)
   done
 
-  # Set DIALOGRC to a custom file including VI key binding
+  # Set DIALOGRC to a custom file including VI key binding.
   if [[ -f "$(get_protonvpn_cli_home)/.dialogrc" ]]; then
       export DIALOGRC="$(get_protonvpn_cli_home)/.dialogrc"
   fi
@@ -1104,7 +1104,7 @@ END`
 
 function show_version() {
     echo
-    echo -e "ProtonVPN Command-Line Tool - v$version"
+    echo -e "ProtonVPN Command-Line Tool – v$version"
     echo "Copyright (c) 2013-2018 Proton Technologies A.G. (Switzerland)"
     echo "Distributed under the MIT software license, see the accompanying file license.md"
     echo
@@ -1112,7 +1112,7 @@ function show_version() {
 
 function help_message() {
     echo
-    echo -e "ProtonVPN Command-Line Tool - v$version\n"
+    echo -e "ProtonVPN Command-Line Tool – v$version\n"
     echo -e "Usage: $(basename $0) [option]\n"
     echo "Options:"
     echo "   --init                              Initialize ProtonVPN profile on the machine."
@@ -1125,7 +1125,7 @@ function help_message() {
     echo "   -cc, --country-connect              Select and connect to a ProtonVPN server by country."
     echo "   -cc [country-name] [protocol]       Connect to the fastest available server in a specific country."
     echo "   -d, --disconnect                    Disconnect the current session."
-    echo "   --reconnect                         Reconnect to the current server."
+    echo "   --reconnect                         Reconnect to the current ProtonVPN server."
     echo "   --ip                                Print the current public IP address."
     echo "   --status                            Print connection status."
     echo "   --update                            Update protonvpn-cli."

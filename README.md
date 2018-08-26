@@ -53,7 +53,7 @@ $ wget "https://github.com/ProtonVPN/protonvpn-cli/raw/master/protonvpn-cli.sh" 
 | `protonvpn-cli -cc, --country-connect`        | Select and connect to a ProtonVPN server by country.           |
 | `protonvpn-cli -cc [country-name] [protocol]` | Connect to the fastest available server in a specific country. |
 | `protonvpn-cli -d, --disconnect`              | Disconnect the current session.                                |
-| `protonvpn-cli --reconnect`                   | Reconnect to the current server.                               |
+| `protonvpn-cli --reconnect`                   | Reconnect to the current ProtonVPN server.                     |
 | `protonvpn-cli --ip`                          | Print the current public IP address.                           |
 | `protonvpn-cli --status`                      | Print connection status.                                       |
 | `protonvpn-cli --update`                      | Update protonvpn-cli.                                          |
