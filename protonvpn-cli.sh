@@ -665,10 +665,10 @@ function print_console_status() {
 }
 
 function get_openvpn_config_info() {
-  vpn_ip=$(awk '$1 == "remote" {print $2}' "$(get_protonvpn_cli_home)/protonvpn_openvpn_config.conf")
-  vpn_port=$(awk '$1 == "remote" {print $3}' "$(get_protonvpn_cli_home)/protonvpn_openvpn_config.conf")
-  vpn_type=$(awk '$1 == "proto" {print $2}' "$(get_protonvpn_cli_home)/protonvpn_openvpn_config.conf")
-  vpn_device_name=$(grep -P "TUN/TAP device (.)+ opened" "$(get_protonvpn_cli_home)/connection_logs" | cut -d " " -f9)
+  vpn_ip=$(awk '$1 == "remote" {print $2}' "$(get_protonvpn_cli_home)/protonvpn_openvpn_config.conf" | head -n 1)
+  vpn_port=$(awk '$1 == "remote" {print $3}' "$(get_protonvpn_cli_home)/protonvpn_openvpn_config.conf" | head -n 1)
+  vpn_type=$(awk '$1 == "proto" {print $2}' "$(get_protonvpn_cli_home)/protonvpn_openvpn_config.conf" | head -n 1)
+  vpn_device_name=$(grep -P "TUN/TAP device (.)+ opened" "$(get_protonvpn_cli_home)/connection_logs" | awk '{print $9}')
   echo "$vpn_ip@$vpn_port@$vpn_type@$vpn_device_name"
 }
 
