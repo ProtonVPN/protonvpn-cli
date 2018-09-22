@@ -50,6 +50,8 @@ $ wget "https://github.com/ProtonVPN/protonvpn-cli/raw/master/protonvpn-cli.sh" 
 | `protonvpn-cli -l, --last-connect`            | Connect to the previously used ProtonVPN server.               |
 | `protonvpn-cli -f, --fastest-connect`         | Connect to the fastest available ProtonVPN server.             |
 | `protonvpn-cli -p2p, --p2p-connect`           | Connect to the fastest available P2P ProtonVPN server.         |
+| `protonvpn-cli -tor, --tor-connect`           | Connect to the fastest available ProtonVPN TOR server.         |
+| `protonvpn-cli -sc, --secure-core-connect`    | Connect to the fastest available ProtonVPN SecureCore server.  |
 | `protonvpn-cli -cc, --country-connect`        | Select and connect to a ProtonVPN server by country.           |
 | `protonvpn-cli -cc [country-name] [protocol]` | Connect to the fastest available server in a specific country. |
 | `protonvpn-cli -d, --disconnect`              | Disconnect the current session.                                |
