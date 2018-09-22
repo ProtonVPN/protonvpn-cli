@@ -544,7 +544,7 @@ function openvpn_connect() {
     --verb 4
     --log "$connection_logs"
     --user nobody
-   --group nobody
+   --group "$(id -gn nobody)"
   )
   if [[ $PROTONVPN_CLI_DAEMON == true ]]; then
     openvpn --daemon "${OPENVPN_OPTS[@]}"
