@@ -541,7 +541,7 @@ function openvpn_connect() {
     --verb 4
     --log "$connection_logs"
   )
-  if [[ $PROTONVPN_CLI_DAEMON = true ]]; then
+  if [[ $PROTONVPN_CLI_DAEMON == true ]]; then
     openvpn --daemon "${OPENVPN_OPTS[@]}"
     trap 'openvpn_disconnect "" dont_exit' INT TERM
   else
