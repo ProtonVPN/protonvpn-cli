@@ -779,6 +779,28 @@ function connect_to_fastest_p2p_vpn() {
   openvpn_connect "$config_id" "$selected_protocol"
 }
 
+function connect_to_fastest_tor_vpn() {
+  check_if_profile_initialized
+  check_if_openvpn_is_currently_running
+  check_if_internet_is_working_normally
+
+  echo "Fetching ProtonVPN servers..."
+  config_id=$(get_fastest_vpn_connection_id "TOR")
+  selected_protocol="udp"
+  openvpn_connect "$config_id" "$selected_protocol"
+}
+
+function connect_to_fastest_secure_core_vpn() {
+  check_if_profile_initialized
+  check_if_openvpn_is_currently_running
+  check_if_internet_is_working_normally
+
+  echo "Fetching ProtonVPN servers..."
+  config_id=$(get_fastest_vpn_connection_id "SECURE_CORE")
+  selected_protocol="udp"
+  openvpn_connect "$config_id" "$selected_protocol"
+}
+
 function connect_to_random_vpn() {
   check_if_profile_initialized
   check_if_openvpn_is_currently_running
@@ -1054,6 +1076,8 @@ json_parsed_response = json.loads("""$response_output""")
 all_features = {"SECURE_CORE": 1, "TOR": 2, "P2P": 4, "XOR": 8, "IPV6": 16}
 excluded_features_on_fastest_connect = ["TOR"]
 required_features = ["$required_feature"] if "$required_feature" in all_features else []
+if "TOR" in required_features:
+    excluded_features_on_fastest_connect.remove("TOR")
 
 candidates_1 = []
 for _ in json_parsed_response["LogicalServers"]:
@@ -1166,6 +1190,8 @@ function help_message() {
     echo "   -l, --last-connect                  Connect to the previously used ProtonVPN server."
     echo "   -f, --fastest-connect               Connect to the fastest available ProtonVPN server."
     echo "   -p2p, --p2p-connect                 Connect to the fastest available P2P ProtonVPN server."
+    echo "   -tor, --tor-connect                 Connect to the fastest available ProtonVPN TOR server."
+    echo "   -sc, --secure-core-connect          Connect to the fastest available ProtonVPN SecureCore server."
     echo "   -cc, --country-connect              Select and connect to a ProtonVPN server by country."
     echo "   -cc [country-name] [protocol]       Connect to the fastest available server in a specific country."
     echo "   -d, --disconnect                    Disconnect the current session."
@@ -1200,6 +1226,10 @@ case $user_input in
   "-f"|"--f"|"-fastest"|"--fastest"|"-fastest-connect"|"--fastest-connect") connect_to_fastest_vpn
     ;;
   "-p2p"|"--p2p"|"-p2p-connect"|"--p2p-connect") connect_to_fastest_p2p_vpn
+    ;;
+  "-tor"|"--tor"|"-tor-connect"|"--tor-connect") connect_to_fastest_tor_vpn
+    ;;
+  "-sc"|"--sc"|"-secure-core-connect"|"--secure-core-connect") connect_to_fastest_secure_core_vpn
     ;;
     "-cc"|"--cc"|"-country-connect"|"--country-connect")
     if [[ $# == 1 ]]; then
