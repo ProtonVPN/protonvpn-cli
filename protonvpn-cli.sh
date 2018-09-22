@@ -811,7 +811,7 @@ function reconnect_to_current_vpn() {
   fi
 
   openvpn_disconnect "quiet" "dont_exit"
-  if [[ $(is_openvpn_currently_running) == true ]]; then  # Checking if it OpenVPN is still active.
+  if [[ $(is_openvpn_currently_running) == true ]]; then  # Checking if OpenVPN is still active.
     echo "[!] Error disconnecting OpenVPN."
     exit 1
   else
@@ -973,7 +973,6 @@ function get_country_vpn_servers_details() {
                          --header 'Accept: application/vnd.protonmail.v1+json' \
                          --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
   tier=$(< "$(get_protonvpn_cli_home)/protonvpn_tier")
-  user_chosen_specific_country="$1"
   output=`python <<END
 import json
 json_parsed_response = json.loads("""$response_output""")
