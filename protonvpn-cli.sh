@@ -9,9 +9,6 @@
 ######################################################
 version=1.1.0
 
-# Set PROTONVPN_CLI_DAEMON=false to disable daemonization of openvpn.
-PROTONVPN_CLI_DAEMON=${PROTONVPN_CLI_DAEMON:=true}
-
 if [[ ("$UID" != 0) && ("$1" != "ip") && ("$1" != "-ip") && \
       ("$1" != "--ip") && ! (-z "$1") && ("$1" != "-h") && \
       ("$1" != "--help") && ("$1" != "--h") && ("$1" != "-help") && \
@@ -487,6 +484,9 @@ function openvpn_connect() {
     echo "[*] CLI logging mode enabled."
     echo -e "[*] Logs path: $connection_logs"
   fi
+
+  # Set PROTONVPN_CLI_DAEMON=false to disable daemonization of openvpn.
+  PROTONVPN_CLI_DAEMON=${PROTONVPN_CLI_DAEMON:=true}
 
   wget \
     --header 'x-pm-appversion: Other' \
