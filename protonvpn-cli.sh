@@ -9,6 +9,9 @@
 ######################################################
 version=1.1.0
 
+# Set PROTONVPN_CLI_DAEMON=false to disable daemonization of openvpn.
+PROTONVPN_CLI_DAEMON=${PROTONVPN_CLI_DAEMON:=true}
+
 if [[ ("$UID" != 0) && ("$1" != "ip") && ("$1" != "-ip") && \
       ("$1" != "--ip") && ! (-z "$1") && ("$1" != "-h") && \
       ("$1" != "--help") && ("$1" != "--h") && ("$1" != "-help") && \
@@ -481,48 +484,72 @@ function openvpn_connect() {
     echo -e "[*] Logs path: $connection_logs"
   fi
 
-      wget --header 'x-pm-appversion: Other' \
-         --header 'x-pm-apiversion: 3' \
-         --header 'Accept: application/vnd.protonmail.v1+json' \
-         --timeout 10 --tries 1 -q -O "$openvpn_config" "https://api.protonmail.ch/vpn/config?Platform=$(detect_platform_type)&LogicalID=$config_id&Protocol=$selected_protocol" \
-
-      openvpn --daemon --config "$openvpn_config" --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials" --auth-retry nointeract --verb 4 --log "$connection_logs"
+  wget \
+    --header 'x-pm-appversion: Other' \
+    --header 'x-pm-apiversion: 3' \
+    --header 'Accept: application/vnd.protonmail.v1+json' \
+    --timeout 10 --tries 1 -q -O "$openvpn_config" \
+    "https://api.protonmail.ch/vpn/config?Platform=$(detect_platform_type)&LogicalID=$config_id&Protocol=$selected_protocol"
 
   echo "Connecting..."
 
-  max_checks=3
-  counter=0
-  while [[ $counter -lt $max_checks ]]; do
-    sleep 6
-    new_ip="$(check_ip)"
-    if [[ ("$current_ip" != "$new_ip") && ("$new_ip" != "Error.") ]]; then
-      echo "[$] Connected!"
-      echo "[#] New IP: $new_ip"
+  {
+    max_checks=3
+    counter=0
+    while [[ $counter -lt $max_checks ]]; do
+      sleep 6
+      new_ip="$(check_ip)"
+      if [[ ("$current_ip" != "$new_ip") && ("$new_ip" != "Error.") ]]; then
+        echo "[$] Connected!"
+        echo "[#] New IP: $new_ip"
 
-      # DNS management
-      if [[ -f "$(get_protonvpn_cli_home)/.custom_dns" ]]; then
-        modify_dns to_custom_dns # Use Custom DNS.
-        echo "[Warning] You have chosen to use a custom DNS server. This may make you vulnerable to DNS leaks. Re-initialize your profile to disable the use of custom DNS."
-      else
-        modify_dns to_protonvpn_dns # Use ProtonVPN DNS server.
+        # DNS management
+        if [[ -f "$(get_protonvpn_cli_home)/.custom_dns" ]]; then
+          modify_dns to_custom_dns # Use Custom DNS.
+          echo "[Warning] You have chosen to use a custom DNS server. This may make you vulnerable to DNS leaks. Re-initialize your profile to disable the use of custom DNS."
+        else
+          modify_dns to_protonvpn_dns # Use ProtonVPN DNS server.
+        fi
+
+        # killswitch enable # Enable killswitch
+
+        echo "$config_id" > "$(get_protonvpn_cli_home)/.connection_config_id"
+        echo "$selected_protocol" > "$(get_protonvpn_cli_home)/.connection_selected_protocol"
+        exit 0
       fi
 
-      # killswitch enable # Enable killswitch
+      counter=$((counter+1))
+    done
 
-      echo "$config_id" > "$(get_protonvpn_cli_home)/.connection_config_id"
-      echo "$selected_protocol" > "$(get_protonvpn_cli_home)/.connection_selected_protocol"
-      exit 0
+    echo "[!] Error connecting to VPN."
+    if grep -q "AUTH_FAILED" "$connection_logs"; then
+      echo "[!] Reason: Authentication failed. Please check your ProtonVPN OpenVPN credentials."
     fi
+    openvpn_disconnect quiet dont_exit
+    exit 1
+  } &
 
-    counter=$((counter+1))
-  done
-
-  echo "[!] Error connecting to VPN."
-  if grep -q "AUTH_FAILED" "$connection_logs"; then
-    echo "[!] Reason: Authentication failed. Please check your ProtonVPN OpenVPN credentials."
+  OPENVPN_OPTS=(
+    --config "$openvpn_config"
+    --auth-user-pass "$(get_protonvpn_cli_home)/protonvpn_openvpn_credentials"
+    --auth-retry nointeract
+    --verb 4
+    --log "$connection_logs"
+  )
+  if [[ $PROTONVPN_CLI_DAEMON = true ]]; then
+    openvpn --daemon "${OPENVPN_OPTS[@]}"
+  else
+    trap 'openvpn_disconnect dont_exit' INT TERM
+    openvpn "${OPENVPN_OPTS[@]}"
+    openvpn_exit=$?
   fi
-  openvpn_disconnect quiet dont_exit
-  exit 1
+
+  wait
+  status_exit=$?
+  if [[ $PROTONVPN_CLI_DAEMON != true ]] && (( status_exit == 0 )); then
+    status_exit=$openvpn_exit
+  fi
+  exit $status_exit
 }
 
 function update_cli() {
