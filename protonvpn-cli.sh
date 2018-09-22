@@ -1026,7 +1026,9 @@ for country in candidates_1.keys():
         if server["Score"] < candidates_2[country]["Score"]:
             candidates_2.update({country: server})
 
-for _ in candidates_2.keys():
+available_countries = candidates_2.keys()
+available_countries = sorted(available_countries)
+for _ in available_countries:
   o = "{} {}@{}@{}@{}@{}@{}".format(candidates_2[_]["ID"], candidates_2[_]["Name"], \
   candidates_2[_]["ExitCountry"], candidates_2[_]["Load"], candidates_2[_]["Servers"][0]["EntryIP"], candidates_2[_]["Servers"][0]["ExitIP"], \
   str(server_features_output))
@@ -1120,6 +1122,7 @@ for _ in json_parsed_response["LogicalServers"]:
     if (_["Tier"] <= int("""$tier""")):
         output.append(_)
 all_features = {"SECURE_CORE": 1, "TOR": 2, "P2P": 4, "XOR": 8, "IPV6": 16}
+output = sorted(output, key=lambda k: k['Name'])
 for _ in output:
     server_features_index = int(_["Features"])
     server_features  = []
