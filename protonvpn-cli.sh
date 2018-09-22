@@ -542,6 +542,8 @@ function openvpn_connect() {
     --auth-retry nointeract
     --verb 4
     --log "$connection_logs"
+    --user nobody
+   --group nobody
   )
   if [[ $PROTONVPN_CLI_DAEMON == true ]]; then
     openvpn --daemon "${OPENVPN_OPTS[@]}"
