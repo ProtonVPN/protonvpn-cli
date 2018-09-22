@@ -415,6 +415,7 @@ function check_if_profile_initialized() {
 function openvpn_disconnect() {
   max_checks=3
   counter=0
+  disconnected=false
 
   if [[ "$1" != "quiet" ]]; then
     echo "Disconnecting..."
@@ -429,6 +430,7 @@ function openvpn_disconnect() {
       sleep 0.50
       if [[ $(is_openvpn_currently_running) == false ]]; then
         modify_dns revert_to_backup # Reverting to original DNS entries
+        disconnected=true
         # killswitch disable # Disabling killswitch
         cp "$(get_protonvpn_cli_home)/.connection_config_id" "$(get_protonvpn_cli_home)/.previous_connection_config_id" 2> /dev/null
         cp "$(get_protonvpn_cli_home)/.connection_selected_protocol" "$(get_protonvpn_cli_home)/.previous_connection_selected_protocol" 2> /dev/null
@@ -448,13 +450,15 @@ function openvpn_disconnect() {
     counter=$((counter+1))
   done
 
-  if [[ "$1" != "quiet" ]]; then
-    echo "[!] Error disconnecting OpenVPN."
+  if [[ "$disconnected" == false ]]; then
+    if [[ "$1" != "quiet" ]]; then
+      echo "[!] Error disconnecting OpenVPN."
 
-    if [[ "$2" != "dont_exit" ]]; then
-      exit 1
+      if [[ "$2" != "dont_exit" ]]; then
+        exit 1
+      fi
+
     fi
-
   fi
 }
 
@@ -538,8 +542,9 @@ function openvpn_connect() {
   )
   if [[ $PROTONVPN_CLI_DAEMON = true ]]; then
     openvpn --daemon "${OPENVPN_OPTS[@]}"
+    trap 'openvpn_disconnect "" dont_exit' INT TERM
   else
-    trap 'openvpn_disconnect dont_exit' INT TERM
+    trap 'openvpn_disconnect "" dont_exit' INT TERM
     openvpn "${OPENVPN_OPTS[@]}"
     openvpn_exit=$?
   fi
