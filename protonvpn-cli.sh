@@ -89,10 +89,11 @@ function get_home() {
 
 function sha512sum_func() {
   if [[ ! -z $(which sha512sum) ]]; then
-    export sha512sum_tool="$(which sha512sum)"
+    sha512sum_tool="$(which sha512sum)"
   elif [[ ! -z $(which shasum) ]]; then
-    export sha512sum_tool="$(which shasum) -a 512 "
+    sha512sum_tool="$(which shasum) -a 512 "
   fi
+  export sha512sum_tool
 }
 
 function get_protonvpn_cli_home() {
@@ -360,7 +361,7 @@ function modify_dns() {
           if grep -q "There aren't any DNS Servers set" "$file"; then
             networksetup -setdnsservers "$interface" empty
           else
-            networksetup -setdnsservers "$interface" $(< "$file")
+            networksetup -setdnsservers "$interface" "$(< "$file")"
           fi
         fi
       done
@@ -593,7 +594,7 @@ function update_cli() {
 
 function install_cli() {
   mkdir -p "/usr/bin/" "/usr/local/bin/"
-  cli="$(cd "$(dirname "$0")"; pwd -P)/$0"
+  cli="$(cd "$(dirname "$0")" && pwd -P)/$0"
   errors_counter=0
   cp "$cli" "/usr/local/bin/protonvpn-cli" &> /dev/null
   if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
@@ -897,13 +898,14 @@ function connection_to_vpn_via_dialog_menu() {
     ID=$(echo "$i" | cut -d " " -f1)
     data=$(echo "$i" | tr '@' ' ' | awk '{$1=""; print $0}' | tr ' ' '@')
     counter=$((counter+1))
-    ARRAY+=($counter)
-    ARRAY+=($data)
+    ARRAY+=("$counter")
+    ARRAY+=("$data")
   done
 
   # Set DIALOGRC to a custom file including VI key binding.
   if [[ -f "$(get_protonvpn_cli_home)/.dialogrc" ]]; then
-      export DIALOGRC="$(get_protonvpn_cli_home)/.dialogrc"
+      DIALOGRC="$(get_protonvpn_cli_home)/.dialogrc"
+      export DIALOGRC
   fi
 
   config_id=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
@@ -971,7 +973,7 @@ function get_country_vpn_servers_details() {
   response_output=$(wget --header 'x-pm-appversion: Other' \
                          --header 'x-pm-apiversion: 3' \
                          --header 'Accept: application/vnd.protonmail.v1+json' \
-                         --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
+                         --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee "$(get_protonvpn_cli_home)/.response_cache")
   tier=$(< "$(get_protonvpn_cli_home)/protonvpn_tier")
   user_chosen_specific_country="$1"
   output=`python <<END
@@ -1036,7 +1038,7 @@ function get_fastest_vpn_connection_id() {
   response_output=$(wget --header 'x-pm-appversion: Other' \
                          --header 'x-pm-apiversion: 3' \
                          --header 'Accept: application/vnd.protonmail.v1+json' \
-                         --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
+                         --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee "$(get_protonvpn_cli_home)/.response_cache")
   tier=$(< "$(get_protonvpn_cli_home)/protonvpn_tier")
   output=`$python <<END
 import json, math, random
@@ -1082,7 +1084,7 @@ function get_random_vpn_connection_id() {
   response_output=$(wget --header 'x-pm-appversion: Other' \
                          --header 'x-pm-apiversion: 3' \
                          --header 'Accept: application/vnd.protonmail.v1+json' \
-                         --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
+                         --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee "$(get_protonvpn_cli_home)/.response_cache")
   tier=$(< "$(get_protonvpn_cli_home)/protonvpn_tier")
   output=`$python <<END
 import json, random
@@ -1101,7 +1103,7 @@ function get_vpn_config_details() {
   response_output=$(wget --header 'x-pm-appversion: Other' \
                          --header 'x-pm-apiversion: 3' \
                          --header 'Accept: application/vnd.protonmail.v1+json' \
-                         --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
+                         --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee "$(get_protonvpn_cli_home)/.response_cache")
   tier=$(< "$(get_protonvpn_cli_home)/protonvpn_tier")
   output=`$python <<END
 import json, random
@@ -1192,14 +1194,14 @@ case $user_input in
     "-cc"|"--cc"|"-country-connect"|"--country-connect")
     if [[ $# == 1 ]]; then
       connection_to_vpn_via_dialog_menu "countries"
-    elif [[ $# > 1 ]]; then
+    elif [[ $# -gt 1 ]]; then
       connect_to_specific_server "$2" "$3" "country"
     fi
     ;;
   "-c"|"-connect"|"--c"|"--connect")
     if [[ $# == 1 ]]; then
       connection_to_vpn_via_dialog_menu "servers"
-    elif [[ $# > 1 ]]; then
+    elif [[ $# -gt 1 ]]; then
       connect_to_specific_server "$2" "$3" "server"
     fi
     ;;
