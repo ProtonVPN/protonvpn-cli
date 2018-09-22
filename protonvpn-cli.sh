@@ -535,6 +535,7 @@ function openvpn_connect() {
     openvpn_disconnect quiet dont_exit
     exit 1
   } &
+  status_check_pid=$!
 
   OPENVPN_OPTS=(
     --config "$openvpn_config"
@@ -554,7 +555,7 @@ function openvpn_connect() {
     openvpn_exit=$?
   fi
 
-  wait
+  wait $status_check_pid
   status_exit=$?
   if [[ $PROTONVPN_CLI_DAEMON != true ]] && (( status_exit == 0 )); then
     status_exit=$openvpn_exit
