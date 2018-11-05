@@ -973,7 +973,7 @@ function initial_menu(){
   response_output=$(wget --header 'x-pm-appversion: Other' \
                          --header 'x-pm-apiversion: 3' \
                          --header 'Accept: application/vnd.protonmail.v1+json' \
-                         --timeout 20 --tries 3 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
+                         --timeout 20 --tries 3 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee "$(get_protonvpn_cli_home)/.response_cache")
 
   initial_menu_items=('Quick Connect' 'Country Selection' 'Specialty Servers');
 
@@ -985,7 +985,7 @@ function initial_menu(){
   counter=0
   for i in ${!initial_menu_items[*]}; do
     counter=$((counter+1))
-    ARRAY+=($counter)
+    ARRAY+=("$counter")
     ARRAY+=("${initial_menu_items[$i]}")
   done
 
@@ -1023,7 +1023,7 @@ function specialty_servers_menu(){
   counter=0
   for i in ${!specialty_servers_menu_items[*]}; do
     counter=$((counter+1))
-    ARRAY+=($counter)
+    ARRAY+=("$counter")
     ARRAY+=("${specialty_servers_menu_items[$i]}")
   done
 
@@ -1046,8 +1046,8 @@ function specialty_servers_menu(){
     ID=$(echo "$i" | cut -d " " -f1)
     data=$(echo "$i" | tr '@' ' ' | awk '{$1=""; print $0}' | tr ' ' '@')
     counter=$((counter+1))
-    ARRAY+=($counter)
-    ARRAY+=($data)
+    ARRAY+=("$counter")
+    ARRAY+=("$data")
   done
 
   config_id=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
@@ -1136,8 +1136,8 @@ function country_connect_menu() {
   for i in $c2; do
     data=$(echo "$i")
     counter=$((counter+1))
-    ARRAY+=($counter)
-    ARRAY+=($data)
+    ARRAY+=("$counter")
+    ARRAY+=("$data")
   done
 
   # Set DIALOGRC to a custom file including VI key binding
@@ -1160,8 +1160,8 @@ function country_connect_menu() {
     ID=$(echo "$i" | cut -d " " -f1)
     data=$(echo "$i" | tr '@' ' ' | awk '{$1=""; print $0}' | tr ' ' '@')
     counter=$((counter+1))
-    ARRAY+=($counter)
-    ARRAY+=($data)
+    ARRAY+=("$counter")
+    ARRAY+=("$data")
   done
 
   # Set DIALOGRC to a custom file including VI key binding.
