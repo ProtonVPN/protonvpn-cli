@@ -599,7 +599,7 @@ function update_cli() {
 
 function install_cli() {
   mkdir -p "/usr/bin/" "/usr/local/bin/"
-  cli="$(cd "$(dirname "$0")" && pwd -P)/$0"
+  cli="$(cd "$(dirname "$0")" && pwd -P)/$(basename "$0")"
   errors_counter=0
   cp "$cli" "/usr/local/bin/protonvpn-cli" &> /dev/null
   if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
