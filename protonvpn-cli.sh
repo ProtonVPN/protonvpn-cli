@@ -205,9 +205,14 @@ function init_cli() {
      chmod 0400 "$(get_protonvpn_cli_home)/.custom_dns"
   fi
 
+  read -p "[.] [Security] Decrease OpenVPN privileges? [Y/n]: " "decrease_openvpn_privileges"
+  if [[ "$decrease_openvpn_privileges" == "y" || "$decrease_openvpn_privileges" == "Y" ||  "$decrease_openvpn_privileges" == "" ]]; then
+    echo "$decrease_openvpn_privileges" > "$(get_protonvpn_cli_home)/.decrease_openvpn_privileges"
+  fi
+
   read -p "[.] Enable Killswitch? [Y/n]: " "enable_killswitch"
-  if [[ "$enable_killswitch" == "n" || "$enable_killswitch" == "N" ]]; then
-    echo > "$(get_protonvpn_cli_home)/.disable_killswitch"
+  if [[ "$enable_killswitch" == "y" || "$enable_killswitch" == "Y" || "$enable_killswitch" == "" ]]; then
+    echo > "$(get_protonvpn_cli_home)/.enable_killswitch"
   fi
 
   chown -R "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/"
@@ -543,9 +548,14 @@ function openvpn_connect() {
     --auth-retry nointeract
     --verb 4
     --log "$connection_logs"
-    --user nobody
-   --group "$(id -gn nobody)"
   )
+
+  if [[ -f "$(get_protonvpn_cli_home)/.decrease_openvpn_privileges" ]]; then
+    OPENVPN_OPTS+=(--user nobody
+                   --group "$(id -gn nobody)"
+                  )
+  fi
+
   if [[ $PROTONVPN_CLI_DAEMON == true ]]; then
     openvpn --daemon "${OPENVPN_OPTS[@]}"
     trap 'openvpn_disconnect "" dont_exit' INT TERM
@@ -711,7 +721,7 @@ function get_openvpn_config_info() {
 }
 
 function killswitch() {
-  if [[ -f "$(get_protonvpn_cli_home)/.disable_killswitch" ]]; then
+  if [[ ! -f "$(get_protonvpn_cli_home)/.enable_killswitch" ]]; then
     return
   fi
 
