@@ -128,7 +128,7 @@ function check_ip() {
                 --header 'x-pm-apiversion: 3' \
                 --header 'Accept: application/vnd.protonmail.v1+json' \
                 -o /dev/null \
-                --timeout 4 --tries 1 -q -O - 'https://api.protonmail.ch/vpn/location' \
+                --timeout 6 --tries 1 -q -O - 'https://api.protonmail.ch/vpn/location' \
                 | $python -c 'import json; _ = open("/dev/stdin", "r").read(); print(json.loads(_)["IP"])' 2> /dev/null)
       counter=$((counter+1))
     else
