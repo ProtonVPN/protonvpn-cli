@@ -1,4 +1,330 @@
 #!/usr/bin/env bash
+
+function initial_menu(){
+  echo "[$] Loading..."
+  check_if_profile_initialized
+  check_if_openvpn_is_currently_running
+  check_if_internet_is_working_normally
+
+  response_output=$(wget --header 'x-pm-appversion: Other' \
+                         --header 'x-pm-apiversion: 3' \
+                         --header 'Accept: application/vnd.protonmail.v1+json' \
+                         --timeout 20 --tries 3 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee $(get_protonvpn_cli_home)/.response_cache)
+
+  initial_menu_items=('Quick Connect' 'Country Selection' 'Specialty Servers');
+
+ # Set DIALOGRC to a custom file including VI key binding
+  if [[ -f "$(get_protonvpn_cli_home)/.dialogrc" ]]; then
+      export DIALOGRC="$(get_protonvpn_cli_home)/.dialogrc"
+  fi
+
+  counter=0
+  for i in ${!initial_menu_items[*]}; do
+    counter=$((counter+1))
+    ARRAY+=($counter)
+    ARRAY+=("${initial_menu_items[$i]}")
+  done
+
+  menu_selection=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
+    --menu "    ____             __            _    ______  _   __\n   / __ \_________  / /_____  ____| |  / / __ \/ | / /\n  / /_/ / ___/ __ \/ __/ __ \/ __ \ | / / /_/ /  |/ / \n / ____/ /  / /_/ / /_/ /_/ / / / / |/ / ____/ /|  /  \n/_/   /_/   \____/\__/\____/_/ /_/|___/_/   /_/ |_/   \n                                                      \n" 35 58 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
+  clear
+  unset ARRAY
+
+  if [[ -z "$menu_selection" ]]; then
+    exit 1
+  fi
+
+  if [ $menu_selection = "1" ];then
+  	connect_to_fastest_vpn
+  fi
+
+  if [ $menu_selection = "2" ];then
+  	country_connect_menu
+  fi
+
+  if [ $menu_selection = "3" ];then
+  	specialty_servers_menu
+  fi
+}
+
+function specialty_servers_menu(){
+
+ # Set DIALOGRC to a custom file including VI key binding
+  if [[ -f "$(get_protonvpn_cli_home)/.dialogrc" ]]; then
+      export DIALOGRC="$(get_protonvpn_cli_home)/.dialogrc"
+  fi
+
+  specialty_servers_menu_items=('Secure Core' 'P2P' 'TOR');
+
+  counter=0
+  for i in ${!specialty_servers_menu_items[*]}; do
+    counter=$((counter+1))
+    ARRAY+=($counter)
+    ARRAY+=("${specialty_servers_menu_items[$i]}")
+  done
+
+  menu_selection=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
+    --menu "    ____             __            _    ______  _   __\n   / __ \_________  / /_____  ____| |  / / __ \/ | / /\n  / /_/ / ___/ __ \/ __/ __ \/ __ \ | / / /_/ /  |/ / \n / ____/ /  / /_/ / /_/ /_/ / / / / |/ / ____/ /|  /  \n/_/   /_/   \____/\__/\____/_/ /_/|___/_/   /_/ |_/   \n                                                      \n" 35 58 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
+  clear
+  unset ARRAY
+  if [[ -z "$menu_selection" ]]; then
+    exit 1
+  fi
+
+  available_protocols=("udp" " " "tcp" " ")
+  IFS=$'\n'
+  ARRAY=()
+
+  c2=$(get_specialty_servers "$menu_selection")
+
+  counter=0
+  for i in $c2; do
+    ID=$(echo "$i" | cut -d " " -f1)
+    data=$(echo "$i" | tr '@' ' ' | awk '{$1=""; print $0}' | tr ' ' '@')
+    counter=$((counter+1))
+    ARRAY+=($counter)
+    ARRAY+=($data)
+  done
+
+  config_id=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
+    --menu "ID - Name - Country - Load - EntryIP - ExitIP - Features" 35 80 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
+  clear
+  unset ARRAY
+
+  if [[ -z "$config_id" ]]; then
+    exit 1
+  fi
+
+  c=1
+  for i in $c2; do
+    ID=$(echo "$i" | cut -d " " -f1)
+    if [[ $c -eq $config_id ]]; then
+      ID=$(echo "$i" | cut -d " " -f1)
+      config_id=$ID
+      break
+    fi
+    c=$((c+1))
+  done
+
+  selected_protocol=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" \
+    --menu "Select Network Protocol" 35 80 2 "${available_protocols[@]}")
+  clear
+  if [[ -z "$selected_protocol" ]]; then
+    exit 1
+  fi
+
+  openvpn_connect "$config_id" "$selected_protocol";
+}
+
+function get_specialty_servers(){
+  response_cache_path="$(get_protonvpn_cli_home)/.response_cache"
+  tier=$(cat "$(get_protonvpn_cli_home)/protonvpn_tier")
+
+  output=`$python <<END
+import json
+response_cache = open("""$response_cache_path""", "r").read()
+json_parsed_response = json.loads(response_cache)
+output = []
+for _ in json_parsed_response["LogicalServers"]:
+    if (_["Tier"] <= int("4")):
+        output.append(_)
+
+all_features = {"Secure Core": 1, "TOR": 2, "P2P": 4, "XOR": 8, "IPV6": 16}
+
+if int('$1') == 1:
+	selected_feature = 1
+if int('$1') == 2:
+	selected_feature = 4
+if int('$1') == 3:
+	selected_feature = 2
+
+for _ in output:
+    server_features_index = int(_["Features"])
+    server_features  = []
+    server_features_output = ""
+    if server_features_index == selected_feature:
+	    for f in all_features.keys():
+	        if (server_features_index & all_features[f]) > 0:
+	            server_features.append(f)
+	    if _["Tier"] == 2:
+	        server_features.append("Plus")
+	    if len(server_features) == 0:
+	        server_features_output = "None"
+	    else:
+	        server_features_output = ",".join(server_features)
+	    o = "{} {}@{}@{}@{}@{}@{}".format(_["ID"], _["Name"], \
+	      _["EntryCountry"], _["Load"], _["Servers"][0]["EntryIP"], _["Servers"][0]["ExitIP"], \
+	      str(server_features_output))
+	    print(o)
+END`
+  echo "$output"
+}
+
+function country_connect_menu() {
+
+  available_protocols=("udp" " " "tcp" " ")
+  IFS=$'\n'
+  ARRAY=()
+
+  c2=$(get_vpn_countries)
+
+  counter=0
+  for i in $c2; do
+    data=$(echo "$i")
+    counter=$((counter+1))
+    ARRAY+=($counter)
+    ARRAY+=($data)
+  done
+
+  # Set DIALOGRC to a custom file including VI key binding
+  if [[ -f "$(get_protonvpn_cli_home)/.dialogrc" ]]; then
+      export DIALOGRC="$(get_protonvpn_cli_home)/.dialogrc"
+  fi
+
+  country_id=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
+    --menu "Country" 35 50 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
+  clear
+  if [[ -z "$country_id" ]]; then
+    exit 1
+  fi
+  unset ARRAY
+
+  c2=$(  get_countries_server_list $country_id)
+
+  counter=0
+  for i in $c2; do
+    ID=$(echo "$i" | cut -d " " -f1)
+    data=$(echo "$i" | tr '@' ' ' | awk '{$1=""; print $0}' | tr ' ' '@')
+    counter=$((counter+1))
+    ARRAY+=($counter)
+    ARRAY+=($data)
+  done
+
+  # Set DIALOGRC to a custom file including VI key binding.
+  if [[ -f "$(get_protonvpn_cli_home)/.dialogrc" ]]; then
+      export DIALOGRC="$(get_protonvpn_cli_home)/.dialogrc"
+  fi
+
+  config_id=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
+    --menu "ID - Name - Country - Load - EntryIP - ExitIP - Features" 35 80 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
+  clear
+  if [[ -z "$config_id" ]]; then
+    exit 1
+  fi
+
+  c=1
+  for i in $c2; do
+    ID=$(echo "$i" | cut -d " " -f1)
+    if [[ $c -eq $config_id ]]; then
+      ID=$(echo "$i" | cut -d " " -f1)
+      config_id=$ID
+      break
+    fi
+    c=$((c+1))
+  done
+
+  selected_protocol=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" \
+    --menu "Select Network Protocol" 35 50 2 "${available_protocols[@]}")
+  clear
+  if [[ -z "$selected_protocol" ]]; then
+    exit 1
+  fi
+
+  openvpn_connect "$config_id" "$selected_protocol"
+}
+
+
+function get_vpn_countries() {
+  response_cache_path="$(get_protonvpn_cli_home)/.response_cache"
+
+  tier=$(cat "$(get_protonvpn_cli_home)/protonvpn_tier")
+  output=`$python <<END
+import json, random
+response_cache = open("""$response_cache_path""", "r").read()
+json_parsed_response = json.loads(response_cache)
+output = []
+for _ in json_parsed_response["LogicalServers"]:
+    if (_["Tier"] <= int("""$tier""")):
+        output.append(_)
+
+all_features = {"SECURE_CORE": 1, "TOR": 2, "P2P": 4, "XOR": 8, "IPV6": 16}
+
+countryIsoCodes = {'AW': 'Aruba', 'AF': 'Afghanistan', 'AO': 'Angola', 'AI': 'Anguilla', 'AL': 'Albania', 'AD': 'Andorra', 'AE': 'United Arab Emirates', 'AR': 'Argentina', 'AM': 'Armenia', 'AS': 'American Samoa',
+'AQ': 'Antarctica', 'TF': 'French Southern Territories', 'AG': 'Antigua and Barbuda', 'AU': 'Australia', 'AT': 'Austria', 'AZ': 'Azerbaijan', 'BI': 'Burundi', 'BE': 'Belgium', 'BJ': 'Benin', 'BQ': 'Bonaire, Sint Eustatius and Saba', 'BF': 'Burkina Faso', 'BD': 'Bangladesh', 'BG': 'Bulgaria', 'BH': 'Bahrain', 'BS': 'Bahamas', 'BA': 'Bosnia and Herzegovina', 'BY': 'Belarus', 'BZ': 'Belize', 'BM': 'Bermuda', 'BO': 'Bolivia, Plurinational State of', 'BR': 'Brazil', 'BB': 'Barbados', 'BN': 'Brunei Darussalam', 'BT': 'Bhutan', 'BV': 'Bouvet Island', 'BW': 'Botswana', 'CF': 'Central African Republic', 'CA': 'Canada', 'CH': 'Switzerland', 'CL': 'Chile', 'CN': 'China', 'CM': 'Cameroon', 'CD': 'Congo', 'CG': 'Congo', 'CK': 'Cook Islands', 'CO': 'Colombia', 'KM': 'Comoros', 'CV': 'Cabo Verde', 'CR': 'Costa Rica', 'CU': 'Cuba', 'CX': 'Christmas Island', 'KY': 'Cayman Islands', 'CY': 'Cyprus', 'CZ': 'Czechia', 'DE': 'Germany', 'DJ': 'Djibouti', 'DM': 'Dominica', 'DK': 'Denmark', 'DO': 'Dominican Republic', 'DZ': 'Algeria', 'EC': 'Ecuador', 'EG': 'Egypt', 'ER': 'Eritrea', 'EH': 'Western Sahara', 'ES': 'Spain', 'EE': 'Estonia', 'ET': 'Ethiopia', 'FI': 'Finland', 'FJ': 'Fiji', 'FK': 'Falkland Islands (Malvinas)', 'FR': 'France', 'FO': 'Faroe Islands', 'FM': 'Micronesia, Federated States of', 'GA': 'Gabon', 'GB': 'United Kingdom', 'GE': 'Georgia', 'GG': 'Guernsey', 'GH': 'Ghana', 'GI': 'Gibraltar', 'GN': 'Guinea', 'GP': 'Guadeloupe', 'GM': 'Gambia', 'GW': 'Guinea-Bissau', 'GQ': 'Equatorial Guinea', 'GR': 'Greece', 'GD': 'Grenada', 'GL': 'Greenland', 'GT': 'Guatemala', 'GF': 'French Guiana', 'GU': 'Guam', 'GY': 'Guyana', 'HK': 'Hong Kong', 'HM': 'Heard Island and McDonald Islands', 'HN': 'Honduras', 'HR': 'Croatia', 'HT': 'Haiti', 'HU': 'Hungary', 'ID': 'Indonesia', 'IM': 'Isle of Man', 'IN': 'India', 'IO': 'British Indian Ocean Territory', 'IE': 'Ireland', 'IR': 'Iran', 'IQ': 'Iraq', 'IS': 'Iceland', 'IL': 'Israel', 'IT': 'Italy', 'JM': 'Jamaica', 'JE': 'Jersey', 'JO': 'Jordan', 'JP': 'Japan', 'KZ': 'Kazakhstan', 'KE': 'Kenya', 'KG': 'Kyrgyzstan', 'KH': 'Cambodia', 'KI': 'Kiribati', 'KN': 'Saint Kitts and Nevis', 'KR': 'South Korea', 'KW': 'Kuwait', 'LA': "Lao People's Democratic Republic", 'LB': 'Lebanon', 'LR': 'Liberia', 'LY': 'Libya', 'LC': 'Saint Lucia', 'LI': 'Liechtenstein', 'LK': 'Sri Lanka', 'LS': 'Lesotho', 'LT': 'Lithuania', 'LU': 'Luxembourg', 'LV': 'Latvia', 'MO': 'Macao', 'MF': 'Saint Martin (French part)', 'MA': 'Morocco', 'MC': 'Monaco', 'MD': 'Moldova', 'MG': 'Madagascar', 'MV': 'Maldives', 'MX': 'Mexico', 'MH': 'Marshall Islands', 'MK': 'Macedonia', 'ML': 'Mali', 'MT': 'Malta', 'MM': 'Myanmar', 'ME':
+'Montenegro', 'MN': 'Mongolia', 'MP': 'Northern Mariana Islands', 'MZ': 'Mozambique', 'MR': 'Mauritania', 'MS': 'Montserrat', 'MQ': 'Martinique', 'MU': 'Mauritius', 'MW': 'Malawi', 'MY': 'Malaysia', 'YT': 'Mayotte', 'NA': 'Namibia', 'NC': 'New Caledonia', 'NE': 'Niger', 'NF': 'Norfolk Island', 'NG': 'Nigeria', 'NI': 'Nicaragua', 'NU': 'Niue', 'NL': 'Netherlands', 'NO': 'Norway', 'NP': 'Nepal', 'NR': 'Nauru', 'NZ': 'New Zealand', 'OM': 'Oman', 'PK': 'Pakistan', 'PA': 'Panama', 'PN': 'Pitcairn', 'PE': 'Peru', 'PH': 'Philippines', 'PW': 'Palau', 'PG': 'Papua New Guinea', 'PL': 'Poland', 'PR': 'Puerto Rico', 'KP': "South Korea", 'PT': 'Portugal', 'PY': 'Paraguay', 'PS': 'Palestine, State of', 'PF': 'French Polynesia', 'QA': 'Qatar', 'RE': 'Reunion', 'RO': 'Romania', 'RU': 'Russian Federation', 'RW': 'Rwanda', 'SA': 'Saudi Arabia', 'SD':
+'Sudan', 'SN': 'Senegal', 'SG': 'Singapore', 'GS': 'South Georgia and the South Sandwich Islands', 'SH': 'Saint Helena, Ascension and Tristan da Cunha', 'SJ': 'Svalbard and Jan Mayen', 'SB': 'Solomon Islands', 'SL': 'Sierra Leone', 'SV': 'El Salvador', 'SM': 'San Marino', 'SO': 'Somalia', 'PM': 'Saint Pierre and Miquelon', 'RS': 'Serbia', 'SS': 'South Sudan', 'ST': 'Sao Tome and Principe', 'SR': 'Suriname', 'SK': 'Slovakia', 'SI': 'Slovenia', 'SE': 'Sweden', 'SZ': 'Swaziland', 'SX': 'Sint Maarten (Dutch part)', 'SC': 'Seychelles', 'SY': 'Syrian Arab Republic', 'TC': 'Turks and Caicos Islands', 'TD': 'Chad', 'TG': 'Togo', 'TH': 'Thailand', 'TJ': 'Tajikistan', 'TK': 'Tokelau', 'TM': 'Turkmenistan', 'TL': 'Timor-Leste', 'TO': 'Tonga', 'TT': 'Trinidad and Tobago', 'TN': 'Tunisia', 'TR': 'Turkey', 'TV': 'Tuvalu', 'TW': 'Taiwan, Province of China', 'TZ': 'Tanzania',
+'UG': 'Uganda',"UK" : 'United Kingdom' ,'UA': 'Ukraine', 'UM': 'United States Minor Outlying Islands', 'UY': 'Uruguay', 'US': 'United States', 'UZ': 'Uzbekistan', 'VA': 'Holy See (Vatican City State)', 'VC': 'Saint Vincent and the Grenadines', 'VE': 'Venezuela', 'VG': 'Virgin Islands, British', 'VI': 'Virgin Islands, U.S.', 'VN': 'Viet Nam', 'VU': 'Vanuatu', 'WF': 'Wallis and Futuna', 'WS': 'Samoa', 'YE': 'Yemen', 'ZA': 'South Africa', 'ZM': 'Zambia', 'ZW': 'Zimbabwe'}
+
+countries = []
+for _ in output:
+    if countryIsoCodes[_['EntryCountry']] not in countries:
+        countries.append(countryIsoCodes[_['EntryCountry']])
+        o = "{}".format(countryIsoCodes[_['EntryCountry']])
+        print(o)
+END`
+
+  echo "$output"
+}
+
+function get_countries_server_list() {
+# function test() {
+
+  response_cache_path="$(get_protonvpn_cli_home)/.response_cache"
+  tier=$(cat "$(get_protonvpn_cli_home)/protonvpn_tier")
+
+  output=`$python <<END
+import json
+response_cache = open("""$response_cache_path""", "r").read()
+json_parsed_response = json.loads(response_cache)
+output = []
+for _ in json_parsed_response["LogicalServers"]:
+    if (_["Tier"] <= int("4")):
+        output.append(_)
+
+all_features = {"SECURE_CORE": 1, "TOR": 2, "P2P": 4, "XOR": 8, "IPV6": 16}
+
+countries = []
+for _ in output:
+  if _['EntryCountry'] not in countries:
+    countries.append(_['EntryCountry'])
+
+for i, country in enumerate(countries):
+	if str(i+1) == """$1""":
+		selected_country = country
+
+best_server = ""
+for _ in output:
+  if _['EntryCountry'] == selected_country:
+    if best_server == "":
+      best_server = _
+    if best_server['Score'] > _['Score']:
+      best_server = _
+o = "{} {}@{}@{}@{}@{}@{}".format(best_server["ID"], "Connect To Fastest", \
+  " ", " ", " ", " ", " ")
+print(o)
+
+for _ in output:
+    server_features_index = int(_["Features"])
+    server_features  = []
+    server_features_output = ""
+    if _['EntryCountry'] == selected_country:
+	    for f in all_features.keys():
+	        if (server_features_index & all_features[f]) > 0:
+	            server_features.append(f)
+	    if _["Tier"] == 2:
+	        server_features.append("Plus")
+	    if len(server_features) == 0:
+	        server_features_output = "None"
+	    else:
+	        server_features_output = ",".join(server_features)
+	    o = "{} {}@{}@{}@{}@{}@{}".format(_["ID"], _["Name"], \
+	      _["EntryCountry"], _["Load"], _["Servers"][0]["EntryIP"], _["Servers"][0]["ExitIP"], \
+	      str(server_features_output))
+	    print(o)
+END`
+  echo "$output"
+}
+
 ######################################################
 # ProtonVPN CLI
 # ProtonVPN Command-Line Tool
@@ -1187,6 +1513,7 @@ function help_message() {
     echo "   --init                              Initialize ProtonVPN profile on the machine."
     echo "   -c, --connect                       Select and connect to a ProtonVPN server."
     echo "   -c [server-name] [protocol]         Connect to a ProtonVPN server by name."
+    echo "   -m, --menu                          Select and connect to a ProtonVPN server from a menu."
     echo "   -r, --random-connect                Connect to a random ProtonVPN server."
     echo "   -l, --last-connect                  Connect to the previously used ProtonVPN server."
     echo "   -f, --fastest-connect               Connect to the fastest available ProtonVPN server."
@@ -1245,6 +1572,8 @@ case $user_input in
     elif [[ $# -gt 1 ]]; then
       connect_to_specific_server "$2" "$3" "server"
     fi
+    ;;
+  "-m"|"--m"|"-menu"|"--menu") initial_menu
     ;;
   "ip"|"-ip"|"--ip") check_ip
     ;;

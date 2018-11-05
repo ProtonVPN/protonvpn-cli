@@ -46,6 +46,7 @@ $ wget "https://github.com/ProtonVPN/protonvpn-cli/raw/master/protonvpn-cli.sh" 
 | `protonvpn-cli --init`                        | Initialize ProtonVPN profile on the machine.                   |
 | `protonvpn-cli -c, --connect`                 | Select and connect to a ProtonVPN server.                      |
 | `protonvpn-cli -c [server-name] [protocol]`   | Connect to a ProtonVPN server by name.                         |
+| `protonvpn-cli -m, --menu`                    | Select and connect to a ProtonVPN server from a menu.          |
 | `protonvpn-cli -r, --random-connect`          | Connect to a random ProtonVPN server.                          |
 | `protonvpn-cli -l, --last-connect`            | Connect to the previously used ProtonVPN server.               |
 | `protonvpn-cli -f, --fastest-connect`         | Connect to the fastest available ProtonVPN server.             |
