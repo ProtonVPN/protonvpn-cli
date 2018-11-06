@@ -1100,7 +1100,7 @@ response_cache = open("""$response_cache_path""", "r").read()
 json_parsed_response = json.loads(response_cache)
 output = []
 for _ in json_parsed_response["LogicalServers"]:
-    if (_["Tier"] <= int("4")):
+    if (_["Tier"] <= int("""$tier""")):
         output.append(_)
 
 all_features = {"Secure Core": 1, "TOR": 2, "P2P": 4, "XOR": 8, "IPV6": 16}
@@ -1241,8 +1241,6 @@ END`
 }
 
 function get_countries_server_list() {
-# function test() {
-
   response_cache_path="$(get_protonvpn_cli_home)/.response_cache"
   tier=$(cat "$(get_protonvpn_cli_home)/protonvpn_tier")
 
@@ -1252,7 +1250,7 @@ response_cache = open("""$response_cache_path""", "r").read()
 json_parsed_response = json.loads(response_cache)
 output = []
 for _ in json_parsed_response["LogicalServers"]:
-    if (_["Tier"] <= int("4")):
+    if (_["Tier"] <= int("""$tier""")):
         output.append(_)
 
 all_features = {"SECURE_CORE": 1, "TOR": 2, "P2P": 4, "XOR": 8, "IPV6": 16}
