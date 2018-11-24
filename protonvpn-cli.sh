@@ -215,6 +215,10 @@ function init_cli() {
     echo > "$(get_protonvpn_cli_home)/.enable_killswitch"
   fi
 
+  config_cache_path="$(get_protonvpn_cli_home)/openvpn_cache/"
+  rm -rf "$config_cache_path"
+  mkdir -p "$config_cache_path"  # Folder for openvpn config cache.
+
   chown -R "$USER:$(id -gn $USER)" "$(get_protonvpn_cli_home)/"
   chmod -R 0400 "$(get_protonvpn_cli_home)/"
 
@@ -486,6 +490,9 @@ function openvpn_connect() {
   rm -f "$connection_logs"  # Remove previous connection logs.
   rm -f "$openvpn_config" # Remove previous openvpn config.
 
+  config_cache_path="$(get_protonvpn_cli_home)/openvpn_cache/"
+  mkdir -p "$config_cache_path"  # Folder for openvpn config cache.
+
   if [[ "$PROTONVPN_CLI_LOG" == "true" ]]; then  # PROTONVPN_CLI_LOG is retrieved from env.
     # This option only prints the path of connection_logs to end-user.
     echo "[*] CLI logging mode enabled."
@@ -503,8 +510,15 @@ function openvpn_connect() {
     --timeout 10 --tries 1 -q -O "$openvpn_config" \
     "https://api.protonmail.ch/vpn/config?Platform=$(detect_platform_type)&LogicalID=$config_id&Protocol=$selected_protocol"
 
-  echo "Connecting..."
+  config_cache_name="$config_cache_path/$(detect_platform_type)-$config_id-$selected_protocol"
+  if [[ -f "$config_cache_name" ]]; then
+    if [[ $(diff "$config_cache_name" "$openvpn_config") ]]; then
+      echo "Configuration changed (of $(detect_platform_type)-$selected_protocol-$config_id)"
+    fi
+  fi
 
+  cp "$openvpn_config" "$config_cache_name"
+  echo "Connecting..."
   {
     max_checks=3
     counter=0
@@ -1609,4 +1623,3 @@ case $user_input in
     ;;
 esac
 exit 0
-
