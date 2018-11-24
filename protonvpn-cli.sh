@@ -1299,12 +1299,15 @@ END`
 
 
 function get_vpn_server_details() {
-  response_cache_path="$(get_protonvpn_cli_home)/.response_cache"
+  response_cache_path="$(get_protonvpn_cli_home)/.response_cache.tmp"
   wget --header 'x-pm-appversion: Other' \
        --header 'x-pm-apiversion: 3' \
        --header 'Accept: application/vnd.protonmail.v1+json' \
-       --timeout 20 --tries 1 -q -O "$response_cache_path" \
+       --timeout 7 --tries 1 -q -O "$response_cache_path" \
        'https://api.protonmail.ch/vpn/logicals'
+  if [[ $? != 0 ]]; then
+    response_cache_path="$(get_protonvpn_cli_home)/.response_cache"
+  fi
   config_id="$1"
   output=`$python <<END
 import json
@@ -1606,3 +1609,4 @@ case $user_input in
     ;;
 esac
 exit 0
+
