@@ -960,7 +960,7 @@ function connection_to_vpn_via_dialog_menu() {
   fi
 
   config_id=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
-    --menu "ID - Name - Country - Load - EntryIP - ExitIP - Features" 35 300 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
+    --menu "ID - Name - Country - Load - EntryIP - ExitIP - Features" 35 300 "$((${#ARRAY[@]}/2))" "${ARRAY[@]}" )
   clear
   if [[ -z "$config_id" ]]; then
     exit 1
@@ -988,120 +988,135 @@ function connection_to_vpn_via_dialog_menu() {
 
 }
 
-function initial_menu(){
+function connection_to_vpn_via_general_dialog_menu() {
   echo "[$] Loading..."
   check_if_profile_initialized
   check_if_openvpn_is_currently_running
   check_if_internet_is_working_normally
 
-  response_output=$(wget --header 'x-pm-appversion: Other' \
-                         --header 'x-pm-apiversion: 3' \
-                         --header 'Accept: application/vnd.protonmail.v1+json' \
-                         --timeout 20 --tries 3 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee "$(get_protonvpn_cli_home)/.response_cache")
+  wget --header 'x-pm-appversion: Other' \
+       --header 'x-pm-apiversion: 3' \
+       --header 'Accept: application/vnd.protonmail.v1+json' \
+       --timeout 20 --tries 3 -q -O "$(get_protonvpn_cli_home)/.response_cache" \
+       'https://api.protonmail.ch/vpn/logicals'
 
-  initial_menu_items=('Quick Connect' 'Country Selection' 'Specialty Servers');
-
- # Set DIALOGRC to a custom file including VI key binding
+  # Set DIALOGRC to a custom file including VI key binding
   if [[ -f "$(get_protonvpn_cli_home)/.dialogrc" ]]; then
-      export DIALOGRC="$(get_protonvpn_cli_home)/.dialogrc"
+    DIALOGRC="$(get_protonvpn_cli_home)/.dialogrc"
+    export DIALOGRC
   fi
 
-  counter=0
-  for i in ${!initial_menu_items[*]}; do
-    counter=$((counter+1))
-    ARRAY+=("$counter")
-    ARRAY+=("${initial_menu_items[$i]}")
-  done
-
-  menu_selection=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
-    --menu "    ____             __            _    ______  _   __\n   / __ \_________  / /_____  ____| |  / / __ \/ | / /\n  / /_/ / ___/ __ \/ __/ __ \/ __ \ | / / /_/ /  |/ / \n / ____/ /  / /_/ / /_/ /_/ / / / / |/ / ____/ /|  /  \n/_/   /_/   \____/\__/\____/_/ /_/|___/_/   /_/ |_/   \n                                                      \n" 35 58 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
-  clear
-  unset ARRAY
-
-  if [[ -z "$menu_selection" ]]; then
-    exit 1
-  fi
-
-  if [ $menu_selection = "1" ];then
-  	connect_to_fastest_vpn
-  fi
-
-  if [ $menu_selection = "2" ];then
-  	country_connect_menu
-  fi
-
-  if [ $menu_selection = "3" ];then
-  	specialty_servers_menu
-  fi
+  IFS=$'\n'
+  dialog_menu 'init'
 }
 
-function specialty_servers_menu(){
+function dialog_menu() {
+  case $1 in
+  'init')
+    initial_menu_items=('1' 'Quick Connect' '2' 'Country Selection' '3' 'Specialty Servers')
 
- # Set DIALOGRC to a custom file including VI key binding
-  if [[ -f "$(get_protonvpn_cli_home)/.dialogrc" ]]; then
-      export DIALOGRC="$(get_protonvpn_cli_home)/.dialogrc"
-  fi
+    menu_selection=$(dialog --clear --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
+      --menu "    ____             __            _    ______  _   __\n   / __ \_________  / /_____  ____| |  / / __ \/ | / /\n  / /_/ / ___/ __ \/ __/ __ \/ __ \ | / / /_/ /  |/ / \n / ____/ /  / /_/ / /_/ /_/ / / / / |/ / ____/ /|  /  \n/_/   /_/   \____/\__/\____/_/ /_/|___/_/   /_/ |_/   \n                                                      \n" 35 58 $((${#initial_menu_items[@]}/2)) "${initial_menu_items[@]}")
+    clear
 
-  specialty_servers_menu_items=('Secure Core' 'P2P' 'TOR');
-
-  counter=0
-  for i in ${!specialty_servers_menu_items[*]}; do
-    counter=$((counter+1))
-    ARRAY+=("$counter")
-    ARRAY+=("${specialty_servers_menu_items[$i]}")
-  done
-
-  menu_selection=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
-    --menu "    ____             __            _    ______  _   __\n   / __ \_________  / /_____  ____| |  / / __ \/ | / /\n  / /_/ / ___/ __ \/ __/ __ \/ __ \ | / / /_/ /  |/ / \n / ____/ /  / /_/ / /_/ /_/ / / / / |/ / ____/ /|  /  \n/_/   /_/   \____/\__/\____/_/ /_/|___/_/   /_/ |_/   \n                                                      \n" 35 58 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
-  clear
-  unset ARRAY
-  if [[ -z "$menu_selection" ]]; then
-    exit 1
-  fi
-
-  available_protocols=("udp" " " "tcp" " ")
-  IFS=$'\n'
-  ARRAY=()
-
-  c2=$(get_specialty_servers "$menu_selection")
-
-  counter=0
-  for i in $c2; do
-    ID=$(echo "$i" | cut -d " " -f1)
-    data=$(echo "$i" | tr '@' ' ' | awk '{$1=""; print $0}' | tr ' ' '@')
-    counter=$((counter+1))
-    ARRAY+=("$counter")
-    ARRAY+=("$data")
-  done
-
-  config_id=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
-    --menu "ID - Name - Country - Load - EntryIP - ExitIP - Features" 35 80 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
-  clear
-  unset ARRAY
-
-  if [[ -z "$config_id" ]]; then
-    exit 1
-  fi
-
-  c=1
-  for i in $c2; do
-    ID=$(echo "$i" | cut -d " " -f1)
-    if [[ $c -eq $config_id ]]; then
-      ID=$(echo "$i" | cut -d " " -f1)
-      config_id=$ID
-      break
+    if [[ -z "$menu_selection" ]]; then
+      exit 1
+    elif [[ "$menu_selection" == "1" ]]; then
+      connect_to_fastest_vpn
+    elif [[ "$menu_selection" == "2" ]]; then
+      first_choice='countries'
+      dialog_menu 'countries'
+    elif [[ "$menu_selection" == "3" ]]; then
+      first_choice='specialties'
+      dialog_menu 'specialties'
     fi
-    c=$((c+1))
-  done
+    ;;
+  'countries')
+    countries=$(get_vpn_countries)
 
-  selected_protocol=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" \
-    --menu "Select Network Protocol" 35 80 2 "${available_protocols[@]}")
-  clear
-  if [[ -z "$selected_protocol" ]]; then
+    ARRAY=()
+    counter=0
+    for i in $countries; do
+      ((counter++))
+      ARRAY+=("$counter")
+      ARRAY+=("$i")
+    done
+
+    country_id=$(dialog --clear --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
+      --menu "Country" 35 50 $((${#ARRAY[@]}/2)) "${ARRAY[@]}" )
+    clear
+
+    if [[ -z "$country_id" ]]; then
+      dialog_menu 'init'
+    else
+      server_list=$(get_countries_server_list "$country_id")
+      dialog_menu 'servers'
+    fi
+    ;;
+  'specialties')
+    specialty_servers_menu_items=('1' 'Secure Core' '2' 'P2P' '3' 'TOR')
+
+    menu_selection=$(dialog --clear --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
+      --menu "    ____             __            _    ______  _   __\n   / __ \_________  / /_____  ____| |  / / __ \/ | / /\n  / /_/ / ___/ __ \/ __/ __ \/ __ \ | / / /_/ /  |/ / \n / ____/ /  / /_/ / /_/ /_/ / / / / |/ / ____/ /|  /  \n/_/   /_/   \____/\__/\____/_/ /_/|___/_/   /_/ |_/   \n                                                      \n" 35 58 $((${#specialty_servers_menu_items[@]}/2)) "${specialty_servers_menu_items[@]}")
+    clear
+
+    if [[ -z "$menu_selection" ]]; then
+      dialog_menu 'init'
+    else
+      server_list=$(get_specialty_servers "$menu_selection")
+      dialog_menu 'servers'
+    fi
+    ;;
+  'servers')
+    if [[ -z "$server_list" ]]; then
+      echo "[!] Error: Empty server list. This feature may not be accessible with your plan."
+      exit 1
+    fi
+
+    ARRAY=()
+    counter=0
+    for i in $server_list; do
+      data=$(echo "$i" | tr '@' ' ' | awk '{$1=""; print $0}' | tr ' ' '@')
+      ((counter++))
+      ARRAY+=("$counter")
+      ARRAY+=("$data")
+    done
+
+    config_id=$(dialog --clear --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
+      --menu "ID - Name - Country - Load - EntryIP - ExitIP - Features" 35 80 $((${#ARRAY[@]}/2)) "${ARRAY[@]}")
+    clear
+
+    if [[ -z "$config_id" ]]; then
+      dialog_menu "$first_choice"
+    else
+      dialog_menu 'protocols'
+    fi
+    ;;
+  'protocols')
+    available_protocols=("udp" " " "tcp" " ")
+    selected_protocol=$(dialog --clear --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" \
+      --menu "Select Network Protocol" 35 80 2 "${available_protocols[@]}")
+    clear
+
+    if [[ -z "$selected_protocol" ]]; then
+      dialog_menu 'servers'
+    else
+      counter=1
+      for i in $server_list; do
+        if ((counter == config_id)); then
+          config_id=$(echo "$i" | cut -d " " -f1)
+          break
+        fi
+        ((counter++))
+      done
+      openvpn_connect "$config_id" "$selected_protocol"
+    fi
+    ;;
+  *)
+    echo "[!] Error: Invalid menu entry."
     exit 1
-  fi
-
-  openvpn_connect "$config_id" "$selected_protocol";
+    ;;
+  esac
 }
 
 function get_specialty_servers(){
@@ -1147,80 +1162,6 @@ for _ in output:
 END`
   echo "$output"
 }
-
-function country_connect_menu() {
-
-  available_protocols=("udp" " " "tcp" " ")
-  IFS=$'\n'
-  ARRAY=()
-
-  c2=$(get_vpn_countries)
-
-  counter=0
-  for i in $c2; do
-    data=$(echo "$i")
-    counter=$((counter+1))
-    ARRAY+=("$counter")
-    ARRAY+=("$data")
-  done
-
-  # Set DIALOGRC to a custom file including VI key binding
-  if [[ -f "$(get_protonvpn_cli_home)/.dialogrc" ]]; then
-      export DIALOGRC="$(get_protonvpn_cli_home)/.dialogrc"
-  fi
-
-  country_id=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
-    --menu "Country" 35 50 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
-  clear
-  if [[ -z "$country_id" ]]; then
-    exit 1
-  fi
-  unset ARRAY
-
-  c2=$(  get_countries_server_list $country_id)
-
-  counter=0
-  for i in $c2; do
-    ID=$(echo "$i" | cut -d " " -f1)
-    data=$(echo "$i" | tr '@' ' ' | awk '{$1=""; print $0}' | tr ' ' '@')
-    counter=$((counter+1))
-    ARRAY+=("$counter")
-    ARRAY+=("$data")
-  done
-
-  # Set DIALOGRC to a custom file including VI key binding.
-  if [[ -f "$(get_protonvpn_cli_home)/.dialogrc" ]]; then
-      export DIALOGRC="$(get_protonvpn_cli_home)/.dialogrc"
-  fi
-
-  config_id=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" --column-separator "@" \
-    --menu "ID - Name - Country - Load - EntryIP - ExitIP - Features" 35 80 "$((${#ARRAY[@]}))" "${ARRAY[@]}" )
-  clear
-  if [[ -z "$config_id" ]]; then
-    exit 1
-  fi
-
-  c=1
-  for i in $c2; do
-    ID=$(echo "$i" | cut -d " " -f1)
-    if [[ $c -eq $config_id ]]; then
-      ID=$(echo "$i" | cut -d " " -f1)
-      config_id=$ID
-      break
-    fi
-    c=$((c+1))
-  done
-
-  selected_protocol=$(dialog --clear  --ascii-lines --output-fd 1 --title "ProtonVPN-CLI" \
-    --menu "Select Network Protocol" 35 50 2 "${available_protocols[@]}")
-  clear
-  if [[ -z "$selected_protocol" ]]; then
-    exit 1
-  fi
-
-  openvpn_connect "$config_id" "$selected_protocol"
-}
-
 
 function get_vpn_countries() {
   response_cache_path="$(get_protonvpn_cli_home)/.response_cache"
@@ -1310,7 +1251,6 @@ for _ in output:
 END`
   echo "$output"
 }
-
 
 function get_vpn_server_details() {
   response_cache_path="$(get_protonvpn_cli_home)/.response_cache.tmp"
@@ -1589,7 +1529,7 @@ case $user_input in
     ;;
   "-sc"|"--sc"|"-secure-core-connect"|"--secure-core-connect") connect_to_fastest_secure_core_vpn
     ;;
-    "-cc"|"--cc"|"-country-connect"|"--country-connect")
+  "-cc"|"--cc"|"-country-connect"|"--country-connect")
     if [[ $# == 1 ]]; then
       connection_to_vpn_via_dialog_menu "countries"
     elif [[ $# -gt 1 ]]; then
@@ -1603,11 +1543,11 @@ case $user_input in
       connect_to_specific_server "$2" "$3" "server"
     fi
     ;;
-  "-m"|"--m"|"-menu"|"--menu") initial_menu
+  "-m"|"--m"|"-menu"|"--menu") connection_to_vpn_via_general_dialog_menu
     ;;
   "ip"|"-ip"|"--ip") check_ip
     ;;
-    "status"|"-status"|"--status") print_console_status
+  "status"|"-status"|"--status") print_console_status
     ;;
   "update"|"-update"|"--update") update_cli
     ;;
@@ -1618,8 +1558,8 @@ case $user_input in
   "-uninstall"|"--uninstall") uninstall_cli
     ;;
   *)
-  echo "[!] Invalid input: $user_input"
-  help_message
+    echo "[!] Invalid input: $user_input"
+    help_message
     ;;
 esac
 exit 0
