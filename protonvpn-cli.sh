@@ -322,12 +322,16 @@ function manage_ipv6() {
   fi
 }
 
+function sanitize_interface_name() {
+  echo "$1" | sed 's/[^a-zA-Z0-9_-]/_/g'
+}
+
 function modify_dns() {
   # Backup DNS entries.
   if [[ ("$1" == "backup") ]]; then
     if [[  ( $(detect_platform_type) == "MacOS" ) ]]; then
       networksetup listallnetworkservices | tail +2 | while read interface; do
-        networksetup -getdnsservers "$interface" > "$(get_protonvpn_cli_home)/$interface.dns_backup"
+        networksetup -getdnsservers "$interface" > "$(get_protonvpn_cli_home)/$(sanitize_interface_name "$interface").dns_backup"
       done
     else # non-Mac
       cp "/etc/resolv.conf" "$(get_protonvpn_cli_home)/.resolv.conf.protonvpn_backup"
@@ -366,7 +370,7 @@ function modify_dns() {
   if [[ "$1" == "revert_to_backup" ]]; then
     if [[  ( $(detect_platform_type) == "MacOS" )  ]]; then
       networksetup listallnetworkservices | tail +2 | while read interface; do
-        file="$(get_protonvpn_cli_home)/$interface.dns_backup"
+        file="$(get_protonvpn_cli_home)/$(sanitize_interface_name "$interface").dns_backup"
         if [[ -f "$file" ]]; then
           if grep -q "There aren't any DNS Servers set" "$file"; then
             networksetup -setdnsservers "$interface" empty
