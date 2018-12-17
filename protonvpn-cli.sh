@@ -1269,7 +1269,7 @@ function get_vpn_server_details() {
        --timeout 7 --tries 1 -q -O "$response_cache_path" \
        'https://api.protonmail.ch/vpn/logicals'
   if [[ $? != 0 ]]; then
-    return
+    response_cache_path="$(get_protonvpn_cli_home)/.response_cache"
   fi
   config_id="$1"
   output=`$python <<END
