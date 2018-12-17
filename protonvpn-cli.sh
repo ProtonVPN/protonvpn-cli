@@ -211,10 +211,11 @@ function init_cli() {
     echo "$decrease_openvpn_privileges" > "$(get_protonvpn_cli_home)/.decrease_openvpn_privileges"
   fi
 
-  read -p "[.] Enable Killswitch? [Y/n]: " "enable_killswitch"
-  if [[ "$enable_killswitch" == "y" || "$enable_killswitch" == "Y" || "$enable_killswitch" == "" ]]; then
-    echo > "$(get_protonvpn_cli_home)/.enable_killswitch"
-  fi
+  # Disabling killswitch prompt
+  #read -p "[.] Enable Killswitch? [Y/n]: " "enable_killswitch"
+  #if [[ "$enable_killswitch" == "y" || "$enable_killswitch" == "Y" || "$enable_killswitch" == "" ]]; then
+  #  echo > "$(get_protonvpn_cli_home)/.enable_killswitch"
+  #fi
 
   config_cache_path="$(get_protonvpn_cli_home)/openvpn_cache/"
   rm -rf "$config_cache_path"
