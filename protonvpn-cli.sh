@@ -1006,6 +1006,9 @@ function connection_to_vpn_via_general_dialog_menu() {
        --timeout 20 --tries 3 -q -O "$(get_protonvpn_cli_home)/.response_cache" \
        'https://api.protonmail.ch/vpn/logicals'
 
+  if [[ $? != 0 ]]; then
+    return
+  fi
   # Set DIALOGRC to a custom file including VI key binding
   if [[ -f "$(get_protonvpn_cli_home)/.dialogrc" ]]; then
     DIALOGRC="$(get_protonvpn_cli_home)/.dialogrc"
@@ -1266,7 +1269,7 @@ function get_vpn_server_details() {
        --timeout 7 --tries 1 -q -O "$response_cache_path" \
        'https://api.protonmail.ch/vpn/logicals'
   if [[ $? != 0 ]]; then
-    response_cache_path="$(get_protonvpn_cli_home)/.response_cache"
+    return
   fi
   config_id="$1"
   output=`$python <<END
@@ -1304,6 +1307,9 @@ function get_country_vpn_servers_details() {
                          --header 'Accept: application/vnd.protonmail.v1+json' \
                          -o /dev/null \
                          --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee "$(get_protonvpn_cli_home)/.response_cache")
+  if [[ $? != 0 ]]; then
+    return
+  fi
   tier=$(< "$(get_protonvpn_cli_home)/protonvpn_tier")
   output=`python <<END
 import json
@@ -1371,6 +1377,10 @@ function get_fastest_vpn_connection_id() {
                          --header 'Accept: application/vnd.protonmail.v1+json' \
                          -o /dev/null \
                          --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee "$(get_protonvpn_cli_home)/.response_cache")
+  if [[ $? != 0 ]]; then
+    return
+  fi
+
   tier=$(< "$(get_protonvpn_cli_home)/protonvpn_tier")
   output=`$python <<END
 import json, math, random
@@ -1420,6 +1430,11 @@ function get_random_vpn_connection_id() {
                          --header 'Accept: application/vnd.protonmail.v1+json' \
                          -o /dev/null \
                          --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee "$(get_protonvpn_cli_home)/.response_cache")
+
+  if [[ $? != 0 ]]; then
+    return
+  fi
+
   tier=$(< "$(get_protonvpn_cli_home)/protonvpn_tier")
   output=`$python <<END
 import json, random
@@ -1440,6 +1455,11 @@ function get_vpn_config_details() {
                          --header 'Accept: application/vnd.protonmail.v1+json' \
                          -o /dev/null \
                          --timeout 20 --tries 1 -q -O - "https://api.protonmail.ch/vpn/logicals" | tee "$(get_protonvpn_cli_home)/.response_cache")
+
+  if [[ $? != 0 ]]; then
+    return
+  fi
+
   tier=$(< "$(get_protonvpn_cli_home)/protonvpn_tier")
   output=`$python <<END
 import json, random
