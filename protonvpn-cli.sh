@@ -320,7 +320,7 @@ function manage_ipv6() {
 
   if [[ $errors_counter != 0 ]]; then
     echo "[!] There are issues in managing IPv6 in the system. Please test the system for the root cause."
-    echo "Not being able to manage IPv6 by protonvpn-cli might cause issues in leaking the system's IPv6 address."
+    echo "Not being able to manage IPv6 by protonvpn-cli may leak the system's IPv6 address."
   fi
 }
 
