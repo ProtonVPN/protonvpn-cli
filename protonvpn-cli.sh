@@ -46,12 +46,12 @@ function check_requirements() {
     exit 1
   fi
 
-  if [[ -z $(which sysctl) && ( $(detect_platform_type) != "Mac" ) ]]; then
+  if [[ -z $(which sysctl) && ( $(detect_platform_type) != "macos" ) ]]; then
     echo "[!] Error: sysctl is not installed. Install \`sysctl\` package to continue."
     exit 1
   fi
 
-  if [[ $(detect_platform_type) == "Linux" ]]; then
+  if [[ $(detect_platform_type) != "macos" ]]; then
     if [[ ( -z $(which iptables) ) ||  ( -z $(which iptables-save) ) || ( -z $(which iptables-restore) ) ]]; then
       echo "[!] Error: iptables is not installed. Install \`iptables\` package to continue."
       exit 1
@@ -64,7 +64,7 @@ function check_requirements() {
     exit 1
   fi
 
-  if [[ (! -x "/etc/openvpn/update-resolv-conf") && ( $(detect_platform_type) != "MacOS") ]]; then
+  if [[ (! -x "/etc/openvpn/update-resolv-conf") && ( $(detect_platform_type) != "macos") ]]; then
     echo "[!] Error: update-resolv-conf is not installed."
     read -p "Would you like protonvpn-cli to install update-resolv-conf? (y/N): " "user_confirm"
     if [[ "$user_confirm" == "y" || "$user_confirm" == "Y" ]]; then
@@ -230,11 +230,11 @@ function init_cli() {
 function detect_platform_type() {
   unameOut="$(uname -s)"
   case "${unameOut}" in
-    Linux*)     platform=Linux;;
-    Darwin*)    platform=MacOS;;
-    CYGWIN*)    platform=Linux;;
-    MINGW*)     platform=Linux;;
-    *)          platform=Linux
+    Linux*)     platform=linux;;
+    Darwin*)    platform=macos;;
+    CYGWIN*)    platform=linux;;
+    MINGW*)     platform=linux;;
+    *)          platform=linux
   esac
   echo "$platform"
 }
@@ -242,7 +242,7 @@ function detect_platform_type() {
 function manage_ipv6() {
   # ProtonVPN support for IPv6 coming soon.
   errors_counter=0
-  if [[ ("$1" == "disable") && ( $(detect_platform_type) != "MacOS" ) ]]; then
+  if [[ ("$1" == "disable") && ( $(detect_platform_type) != "macos" ) ]]; then
     if [ ! -z "$(ip -6 a 2> /dev/null)" ]; then
 
       # Save linklocal address and disable IPv6.
@@ -259,7 +259,7 @@ function manage_ipv6() {
   fi
 
   # Disable IPv6 in macOS.
-  if [[ ("$1" == "disable") &&  ( $(detect_platform_type) == "MacOS" ) ]]; then
+  if [[ ("$1" == "disable") &&  ( $(detect_platform_type) == "macos" ) ]]; then
     # Get list of services and remove the first line which contains a heading.
     ipv6_services="$( networksetup  -listallnetworkservices | sed -e '1,1d')"
 
@@ -279,11 +279,11 @@ function manage_ipv6() {
 
   fi
 
-  if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_address" ) && ( $(detect_platform_type) != "MacOS" ) ]]; then
+  if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_address" ) && ( $(detect_platform_type) != "macos" ) ]]; then
     echo "[!] This is an error in enabling IPv6 on the machine. Please enable it manually."
   fi
 
-  if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_address" ) && ( $(detect_platform_type) != "MacOS" ) ]]; then
+  if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_address" ) && ( $(detect_platform_type) != "macos" ) ]]; then
     sysctl -w net.ipv6.conf.all.disable_ipv6=0 &> /dev/null
     if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
@@ -299,12 +299,12 @@ function manage_ipv6() {
     rm -f "$(get_protonvpn_cli_home)/.ipv6_address"
   fi
 
-  if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_services" ) && ( $(detect_platform_type) == "MacOS" ) ]]; then
+  if [[ ("$1" == "enable") && ( ! -f "$(get_protonvpn_cli_home)/.ipv6_services" ) && ( $(detect_platform_type) == "macos" ) ]]; then
     echo "[!] This is an error in enabling IPv6 on the machine. Please enable it manually."
   fi
 
   # Restore IPv6 in macOS.
-  if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_services" ) && ( $(detect_platform_type) == "MacOS" ) ]]; then
+  if [[ ("$1" == "enable") && ( -f "$(get_protonvpn_cli_home)/.ipv6_services" ) && ( $(detect_platform_type) == "macos" ) ]]; then
     if [[ $(< "$(get_protonvpn_cli_home)/.ipv6_services") == "" ]] ; then
       return
     fi
@@ -331,7 +331,7 @@ function sanitize_interface_name() {
 function modify_dns() {
   # Backup DNS entries.
   if [[ ("$1" == "backup") ]]; then
-    if [[  ( $(detect_platform_type) == "MacOS" ) ]]; then
+    if [[  ( $(detect_platform_type) == "macos" ) ]]; then
       networksetup listallnetworkservices | tail +2 | while read interface; do
         networksetup -getdnsservers "$interface" > "$(get_protonvpn_cli_home)/$(sanitize_interface_name "$interface").dns_backup"
       done
@@ -345,7 +345,7 @@ function modify_dns() {
       connection_logs="$(get_protonvpn_cli_home)/connection_logs"
       dns_server=$(grep 'dhcp-option DNS' "$connection_logs" | head -n 1 | awk -F 'dhcp-option DNS ' '{print $2}' | cut -d ',' -f1) # ProtonVPN internal DNS.
 
-    if [[ ( $(detect_platform_type) == "MacOS" ) ]]; then
+    if [[ ( $(detect_platform_type) == "macos" ) ]]; then
       networksetup listallnetworkservices | tail +2 | while read interface; do
         networksetup -setdnsservers "$interface" $dns_server
       done
@@ -359,7 +359,7 @@ function modify_dns() {
       custom_dns="$(get_protonvpn_cli_home)/.custom_dns"
       dns_server=$(< "$custom_dns")
 
-    if [[ ( $(detect_platform_type) == "MacOS" ) ]]; then
+    if [[ ( $(detect_platform_type) == "macos" ) ]]; then
       networksetup listallnetworkservices | tail +2 | while read interface; do
         networksetup -setdnsservers "$interface" $dns_server
       done
@@ -370,7 +370,7 @@ function modify_dns() {
 
   # Restore backed-up DNS entries.
   if [[ "$1" == "revert_to_backup" ]]; then
-    if [[  ( $(detect_platform_type) == "MacOS" )  ]]; then
+    if [[  ( $(detect_platform_type) == "macos" )  ]]; then
       networksetup listallnetworkservices | tail +2 | while read interface; do
         file="$(get_protonvpn_cli_home)/$(sanitize_interface_name "$interface").dns_backup"
         if [[ -f "$file" ]]; then
@@ -746,16 +746,16 @@ function killswitch() {
   fi
 
   if [[ $1 == "backup_rules" ]]; then
-    if [[ $(detect_platform_type) == "Linux" ]]; then
+    if [[ $(detect_platform_type) == "linux" ]]; then
       iptables-save > "$(get_protonvpn_cli_home)/.iptables.save"
-    elif [[ $(detect_platform_type) == "MacOS" ]]; then
+    elif [[ $(detect_platform_type) == "macos" ]]; then
       # Todo: logic
       false
     fi
   fi
 
   if [[ $1 == "enable" ]]; then
-    if [[ $(detect_platform_type) == "Linux" ]]; then
+    if [[ $(detect_platform_type) == "linux" ]]; then
       vpn_port=$(get_openvpn_config_info | cut -d "@" -f2)
       vpn_type=$(get_openvpn_config_info | cut -d "@" -f3)
       vpn_device_name=$(get_openvpn_config_info | cut -d "@" -f4)
@@ -771,17 +771,17 @@ function killswitch() {
       iptables -A OUTPUT -p "$vpn_type" -m "$vpn_type" --dport "$vpn_port" -j ACCEPT
       iptables -A INPUT -p "$vpn_type" -m "$vpn_type" --sport "$vpn_port" -j ACCEPT
 
-    elif [[ $(detect_platform_type) == "MacOS" ]]; then
+    elif [[ $(detect_platform_type) == "macos" ]]; then
      # Todo: logic
      false
     fi
   fi
 
   if [[ $1 == "disable" ]]; then
-    if [[ $(detect_platform_type) == "Linux" ]]; then
+    if [[ $(detect_platform_type) == "linux" ]]; then
       iptables -F
       iptables-restore < "$(get_protonvpn_cli_home)/.iptables.save"
-    elif [[ $(detect_platform_type) == "MacOS" ]]; then
+    elif [[ $(detect_platform_type) == "macos" ]]; then
       # Todo: logic
       false
     fi
