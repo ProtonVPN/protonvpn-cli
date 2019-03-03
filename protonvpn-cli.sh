@@ -24,11 +24,11 @@ function check_requirements() {
     exit 1
   fi
 
-  if [[ ! -z $(which python) ]]; then
+  if [[ -n $(which python) ]]; then
     python=$(which python)
-  elif [[ ! -z $(which python3) ]]; then
+  elif [[ -n $(which python3) ]]; then
     python=$(which python3)
-  elif [[ ! -z $(which python2) ]]; then
+  elif [[ -n $(which python2) ]]; then
     python=$(which python2)
   fi
 
@@ -89,9 +89,9 @@ function get_home() {
 }
 
 function sha512sum_func() {
-  if [[ ! -z $(which sha512sum) ]]; then
+  if [[ -n $(which sha512sum) ]]; then
     sha512sum_tool="$(which sha512sum)"
-  elif [[ ! -z $(which shasum) ]]; then
+  elif [[ -n $(which shasum) ]]; then
     sha512sum_tool="$(which shasum) -a 512 "
   fi
   export sha512sum_tool
@@ -243,7 +243,7 @@ function manage_ipv6() {
   # ProtonVPN support for IPv6 coming soon.
   errors_counter=0
   if [[ ("$1" == "disable") && ( $(detect_platform_type) != "macos" ) ]]; then
-    if [ ! -z "$(ip -6 a 2> /dev/null)" ]; then
+    if [ -n "$(ip -6 a 2> /dev/null)" ]; then
 
       # Save linklocal address and disable IPv6.
       ip -6 a | awk '/^[0-9]/ {DEV=$2}/inet6 fe80/ {print substr(DEV,1,length(DEV)-1) " " $2}' > "$(get_protonvpn_cli_home)/.ipv6_address"
@@ -649,7 +649,7 @@ function install_cli() {
   chmod 0755 "/usr/local/bin/protonvpn-cli" "/usr/local/bin/pvpn" "/usr/bin/protonvpn-cli" "/usr/bin/pvpn" &> /dev/null
   if [[ $? != 0 ]]; then errors_counter=$((errors_counter+1)); fi
 
-  if [[ ($errors_counter == 0) || ( ! -z $(which protonvpn-cli) ) ]]; then
+  if [[ ($errors_counter == 0) || ( -n $(which protonvpn-cli) ) ]]; then
     echo "[*] Done."
     exit 0
   else
