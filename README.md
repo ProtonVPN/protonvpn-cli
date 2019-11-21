@@ -3,6 +3,16 @@
 
 ![protonvpn-cli](https://i.imgur.com/tDrwkX5l.png)
 
+# Deprecation warning
+
+This Version of ProtonVPN-CLI has been deprecated and is no longer maintained by the ProtonVPN Team.
+
+It is superseded by Version 2. Due to the new version being written in Python, you can't update it with the `--update` option. The new version needs to be installed manually. For installation instructions, please visit the project page at
+
+https://github.com/ProtonVPN/protonvpn-cli-ng
+
+*Note: To disable the deprecation warning in the program, create a file called `deprecation_warning` in the `~/.protonvpn-cli` configuration folder.*
+
 # Overview #
 protonvpn-cli is a command-line tool for Linux and macOS.
 
