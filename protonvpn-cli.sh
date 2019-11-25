@@ -1533,6 +1533,16 @@ function help_message() {
     exit 0
 }
 
+if [ ! -f "$(get_protonvpn_cli_home)/deprecation_warning" ]; then
+  echo "[!] Deprecation warning [!]"
+  echo
+  echo "This Version of ProtonVPN-CLI has been deprecated and is no longer maintained by the ProtonVPN Team."
+  echo "It is superseded by Version 2. Due to the new version being written in Python, you can't"
+  echo "update it with the --update option. The new version needs to be installed manually." 
+  echo "For installation instructions, please visit the project page at"
+  echo "https://github.com/ProtonVPN/protonvpn-cli-ng"
+fi
+
 check_requirements
 user_input="$1"
 case $user_input in
